@@ -69,6 +69,32 @@ const registerUser = async (req, res) => {
   }
 };
 
-const loginAdmin = async (req, res) => {};
+const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-export { loginUser, registerUser, loginAdmin };
+    let payload = { email } + { password };
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
+      const token = jwt.sign({ email }, process.env.JWT_ADMIN_SECRET, {
+        expiresIn: "1h",
+      });
+
+      return res.json({
+        success: true,
+        token,
+      });
+    }
+
+    res
+      .status(401)
+      .json({ success: false, message: "Invalid email or password" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export { registerUser, loginUser, loginAdmin };
