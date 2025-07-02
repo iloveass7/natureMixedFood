@@ -4,7 +4,7 @@ import { Facebook, Instagram, Twitter, Youtube, Mail, Phone } from 'lucide-react
 
 export const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white w-full">
+    <footer className="bg-green-900 text-white w-full">
       <div className="max-w-7xl mx-67 py-12 px-1 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
           
@@ -17,21 +17,21 @@ export const Footer = () => {
                 className="h-20 w-20"
               />
             </h3>
-            <p className="text-gray-400 text-lg">
+            <p className="text-white text-lg font-semibold">
               Bringing you the best content and services since 2024.
             </p>
             
             <div className="flex space-x-4 pt-2">
-              <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors">
+              <a href="#" className="text-white hover:text-blue-500 transition-colors">
                 <Facebook size={26} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-pink-500 transition-colors">
+              <a href="#" className="text-white hover:text-pink-500 transition-colors">
                 <Instagram size={26} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-blue-400 transition-colors">
+              <a href="#" className="text-white hover:text-blue-400 transition-colors">
                 <Twitter size={26} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-red-500 transition-colors">
+              <a href="#" className="text-white hover:text-red-500 transition-colors">
                 <Youtube size={26} />
               </a>
             </div>
@@ -42,22 +42,22 @@ export const Footer = () => {
             <h4 className="text-2xl font-bold">Quick Links</h4>
             <ul className="space-y-2 text-lg">
               <li>
-                <Link to="/" className="text-gray-400 hover:text-teal-400 transition-colors">
+                <Link to="/" className="text-white hover:text-yellow-500 transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/blogs" className="text-gray-400 hover:text-teal-400 transition-colors">
+                <Link to="/blogs" className="text-white hover:text-yellow-500 transition-colors">
                   Blogs
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-400 hover:text-teal-400 transition-colors">
+                <Link to="/about" className="text-white hover:text-yellow-500 transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/profile" className="text-gray-400 hover:text-teal-400 transition-colors">
+                <Link to="/profile" className="text-white hover:text-yellow-500 transition-colors">
                   My Profile
                 </Link>
               </li>
@@ -67,24 +67,14 @@ export const Footer = () => {
           {/* Right Column - Contact Info */}
           <div className="space-y-4 px-20">
             <h4 className="text-2xl font-bold">Contact Us</h4>
-            <div className="space-y-2 text-lg text-gray-400">
+            <div className="space-y-2 text-lg text-white">
               <div className="flex items-center space-x-2">
-                <Mail size={28} className="text-teal-400" />
-                <span>contact@mylogo.com</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone size={18} className="text-teal-400" />
+                <Phone size={18} className="text-yellow-500" />
                 <span>+1 (555) 123-4567</span>
               </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="mt-2 flex">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="px-3 py-2 text-gray-900 rounded-l focus:outline-none w-full"
-                />
+              <div className="flex items-center space-x-2">
+                <Mail size={18} className="text-yellow-500" />
+                <span>contact@email.com</span>
               </div>
             </div>
           </div>
