@@ -36,7 +36,7 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-gray-900 text-white px-1 py-5 fixed w-full z-40">
+      <nav className="bg-green-900 text-white px-1 py-5 fixed w-full z-40">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Left - Logo */}
           <div className="w-1/4">
@@ -50,17 +50,17 @@ export const Navbar = () => {
           </div>
 
           {/* Center - Links (fixed position) */}
-          <ul className="hidden md:flex gap-6 text-lg font-semibold w-2/4 justify-center">
-            <li><Link to="/" className="hover:text-teal-400 transition-colors">Home</Link></li>
-            <li><Link to="/blogs" className="hover:text-teal-400 transition-colors">Blogs</Link></li>
-            <li><Link to="/about" className="hover:text-teal-400 transition-colors">About Us</Link></li>
+          <ul className="hidden md:flex gap-6 text-xl font-semibold w-2/4 justify-center">
+            <li><Link to="/" className="hover:text-yellow-500 transition-colors">Home</Link></li>
+            <li><Link to="/blogs" className="hover:text-yellow-500 transition-colors">Blogs</Link></li>
+            <li><Link to="/about" className="hover:text-yellow-500 transition-colors">About Us</Link></li>
             <li>
               {isLoggedIn ? (
-                <Link to="/profile" className="hover:text-teal-400 transition-colors">
+                <Link to="/profile" className="hover:text-yellow-500 transition-colors">
                   {userData?.name || 'Profile'}
                 </Link>
               ) : (
-                <Link to="/login" className="hover:text-teal-400 transition-colors">Login</Link>
+                <Link to="/login" className="hover:text-yellow-500 transition-colors">Login</Link>
               )}
             </li>
           </ul>
@@ -70,7 +70,7 @@ export const Navbar = () => {
             {/* Search Icon */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="p-2 hover:text-teal-400 transition-colors"
+              className="p-2 hover:text-yellow-500 transition-colors"
               title="Search"
             >
               <Search size={24} />
@@ -80,7 +80,7 @@ export const Navbar = () => {
             {isLoggedIn && (
               <button
                 onClick={() => setCartOpen(true)}
-                className="p-2 hover:text-teal-400 transition-colors relative"
+                className="p-2 hover:text-yellow-500 transition-colors relative"
                 title="Cart"
               >
                 <ShoppingCart size={24} />
