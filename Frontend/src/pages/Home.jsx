@@ -55,7 +55,7 @@ export const Home = () => {
     <div className="w-full">
 
       {/* HERO SECTION */}
-      <section className="flex flex-col md:flex-row gap-4 px-2 md:px-4 py-22 h-220">
+      <section className="flex flex-col md:flex-row gap-4 px-2 md:px-4 pt-3 pb-14 h-190">
 
         {/* Banner Image */}
         <div
@@ -100,7 +100,7 @@ export const Home = () => {
 
       {/* ALL PRODUCTS SECTION */}
       <section className="px-4 md:px-20 lg:px-40 py-2">
-        <h2 className="text-5xl font-bold mb-10 text-center text-green-700 hover:text-amber-400">All Products</h2>
+        <h2 className="text-[2.5rem] sm:text-[2.5rem] md:text-[2.8rem] font-bold mb-10 text-center text-green-900 hover:text-amber-400">আমাদের পণ্যসমূহ</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
           {visibleProducts.map((product) => (

@@ -11,6 +11,7 @@ import { Profile } from "./pages/Profile";
 import { Cart } from "./pages/Cart";
 import { SearchSidebar } from "./components/SearchSidebar";
 import ProductDetails from "./pages/ProductDetails";
+import CheckoutPage from "./pages/CheckoutPage";
 const App = () => {
   return (
     <Router>
@@ -25,6 +26,8 @@ const App = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/search" element={<SearchSidebar />} />
         <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+
       </Routes>
 
       <Footer />

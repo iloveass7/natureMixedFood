@@ -11,28 +11,28 @@ export const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery, ha
                     <div className="h-full flex flex-col bg-white shadow-xl">
                         <div className="p-6 border-b border-gray-200">
                             <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-medium text-gray-900">Search Products</h2>
+                                <h2 className="text-[1.7rem] text-green-700 px-3 font-bold">Search Products</h2>
                                 <button
                                     type="button"
-                                    className="text-gray-400 hover:text-gray-500"
+                                    className="text-amber-400 hover:text-green-700"
                                     onClick={onClose}
                                 >
                                     <X size={24} />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSearch} className="mt-4 flex">
+                            <form onSubmit={handleSearch} className="px-3 mt-4 flex">
                                 <input
                                     type="text"
                                     placeholder="Search here..."
-                                    className="flex-grow px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                    className="flex-grow px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-amber-400"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     autoFocus
                                 />
                                 <button
                                     type="submit"
-                                    className="bg-teal-600 text-white px-4 py-2 rounded-r hover:bg-teal-700 transition-colors"
+                                    className="bg-green-600 text-white px-4 py-2 rounded-r hover:bg-amber-400 transition-colors"
                                 >
                                     Search
                                 </button>
@@ -57,7 +57,7 @@ export const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery, ha
                                     </div>
                                 </div>
                             ) : (
-                                <div className="text-center text-gray-500 py-8">
+                                <div className="text-center text-gray-500 justify-center flex items-center h-full">
                                     <p>Enter your search query above</p>
                                 </div>
                             )}
