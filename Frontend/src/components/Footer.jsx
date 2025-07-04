@@ -13,7 +13,7 @@ export const Footer = () => {
           
           {/* LEFT COLUMN - Only centers content on mobile */}
           <div className="space-y-4 text-center sm:text-left">
-            <img src="log.png" alt="Nature Mixed Food" className="h-30 mx-auto sm:mx-0" />
+            <img src="log.png" alt="Nature Mixed Food" className="h-33 mx-auto sm:mx-0" />
             <p className="text-white text-[1.4rem] font-semibold">
               Bringing you the best content and services since 2024.
             </p>
@@ -35,7 +35,7 @@ export const Footer = () => {
 
           {/* RIGHT COLUMN - Only centers on mobile */}
           <div className="space-y-4 text-center sm:text-left sm:ml-auto">
-            <h4 className="text-[1.9rem] font-bold py-8">Contact Us</h4>
+            <h4 className="text-[1.9rem] font-bold py-8 px-7">Contact Us</h4>
             <div className="space-y-5 text-[1.4rem]">
               <div className="flex justify-center sm:justify-start items-center space-x-2">
                 <Phone size={28} className="text-yellow-500" />
