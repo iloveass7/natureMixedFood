@@ -19,28 +19,52 @@ const AddProduct = () => {
     setImages(updatedImages);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const productData = {
-      title,
-      type,
-      description,
-      quantity,
-      price,
-      images,
-    };
+  const formData = new FormData();
+  formData.append("name", title);
+  formData.append("description", description);
+  formData.append("price", price);
 
-    console.log("New Product:", productData);
-    alert("Product Added Successfully!");
+  // Append each image with field name image1, image2, ...
+  images.forEach((file, index) => {
+    if (index < 5) {
+      formData.append(`image${index + 1}`, file);
+    }
+  });
 
-    setImages([]);
-    setTitle("");
-    setType("Premium Quality");
-    setDescription("");
-    setQuantity(0);
-    setPrice("");
-  };
+  try {
+    const res = await fetch("http://localhost:8000/api/product/addProduct", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Product Added Successfully!");
+      console.log("Product:", data.product);
+
+      // Reset form
+      setImages([]);
+      setTitle("");
+      setType("Premium Quality");
+      setDescription("");
+      setQuantity(0);
+      setPrice("");
+    } else {
+      alert(data.message || "Failed to add product");
+    }
+  } catch (error) {
+    console.error("Error adding product:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">

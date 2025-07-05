@@ -11,7 +11,9 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const isLoggedIn = localStorage.getItem('authToken') || localStorage.getItem('userData');
+  const isUserLoggedIn = localStorage.getItem('authToken') || localStorage.getItem('userData');
+  const isAdminLoggedIn = localStorage.getItem('adminToken');
+
   const userData = localStorage.getItem('userData')
     ? JSON.parse(localStorage.getItem('userData'))
     : null;
@@ -19,6 +21,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    localStorage.removeItem('adminToken');
     navigate('/login');
     window.location.reload();
   };
@@ -40,12 +43,14 @@ const Navbar = () => {
           </div>
 
           {/* Center - Links */}
-        <ul className="hidden md:flex flex-1 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] md:pt-auto lg:text-[1.5rem]">
+          <ul className="hidden md:flex flex-1 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] md:pt-auto lg:text-[1.5rem]">
             <li><Link to="/" className="hover:text-yellow-500">Home</Link></li>
             <li><Link to="/blogs" className="hover:text-yellow-500">Blogs</Link></li>
             <li><Link to="/about" className="hover:text-yellow-500">About</Link></li>
             <li>
-              {isLoggedIn ? (
+              {isAdminLoggedIn ? (
+                <Link to="/admin" className="hover:text-yellow-500">Admin Profile</Link>
+              ) : isUserLoggedIn ? (
                 <Link to="/profile" className="hover:text-yellow-500">
                   {userData?.name || 'Profile'}
                 </Link>
@@ -61,7 +66,7 @@ const Navbar = () => {
               <Search size={31} />
             </button>
 
-            {isLoggedIn && (
+            {isUserLoggedIn && (
               <button onClick={() => setCartOpen(true)} className="relative hover:text-yellow-500" title="Cart">
                 <ShoppingCart size={31} />
                 <span className="absolute -top-1 -right-2 bg-red-600 text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -70,7 +75,7 @@ const Navbar = () => {
               </button>
             )}
 
-            {isLoggedIn && (
+            {(isUserLoggedIn || isAdminLoggedIn) && (
               <button onClick={handleLogout} className="hover:text-red-500" title="Logout">
                 <LogOut size={31} />
               </button>
@@ -91,8 +96,12 @@ const Navbar = () => {
               <li><Link to="/blogs" onClick={() => setMenuOpen(false)}>Blogs</Link></li>
               <li><Link to="/about" onClick={() => setMenuOpen(false)}>About Us</Link></li>
               <li>
-                {isLoggedIn ? (
-                  <Link to="/profile" onClick={() => setMenuOpen(false)}>{userData?.name || 'Profile'}</Link>
+                {isAdminLoggedIn ? (
+                  <Link to="/admin" onClick={() => setMenuOpen(false)}>Admin Profile</Link>
+                ) : isUserLoggedIn ? (
+                  <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                    {userData?.name || 'Profile'}
+                  </Link>
                 ) : (
                   <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
                 )}
@@ -119,4 +128,5 @@ const Navbar = () => {
     </>
   );
 };
+
 export default Navbar;

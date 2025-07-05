@@ -54,7 +54,7 @@ const ProductsSection = ({ products, loading }) => {
                     onClick={(e) => e.stopPropagation()}
                     className="w-full bg-yellow-500 text-white py-2 rounded font-medium hover:bg-green-100 hover:text-green-600 transition"
                   >
-                    Add Cart
+                    Add to Cart
                   </button>
                   <button
                     onClick={(e) => {
@@ -63,7 +63,7 @@ const ProductsSection = ({ products, loading }) => {
                     }}
                     className="w-full bg-green-700 text-white py-2 rounded font-medium hover:bg-yellow-500 transition"
                   >
-                    Buy
+                    Buy Now
                   </button>
                 </div>
               </div>

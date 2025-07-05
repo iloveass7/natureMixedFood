@@ -1,9 +1,9 @@
-// controllers/userController.js
-
 import userModel from "../schema/userModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import { createUserToken } from "../utils/auth.js";
+import jwt from "jsonwebtoken";
+
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
