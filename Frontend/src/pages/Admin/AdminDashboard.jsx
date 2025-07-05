@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import AddBlog from "./Admin/AddBlog";
-import AddProduct from "./Admin/AddProduct";
-import EditImages from "./Admin/EditImages";
-import OrderList from "./Admin/OrderList";
+import AddBlog from "./AddBlog";
+import AddProduct from "./AddProduct";
+import EditImages from "./EditImages";
+import OrderList from "./OrderList";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("orders");

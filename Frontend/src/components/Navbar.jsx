@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingCart, LogOut } from 'lucide-react';
-import { Cart } from '../pages/Cart';
-import { SearchSidebar } from './SearchSidebar';
+import Cart from '../pages/Cart';
+import SearchSidebar from './SearchSidebar';
 
-export const Navbar = () => {
+const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -119,3 +119,4 @@ export const Navbar = () => {
     </>
   );
 };
+export default Navbar;

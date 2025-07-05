@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-export const Register = () => {
+const Register = () => {
   const [form, setForm] = useState({ 
     name: "", 
     email: "", 
@@ -155,3 +155,4 @@ export const Register = () => {
     </div>
   );
 };
+export default Register;

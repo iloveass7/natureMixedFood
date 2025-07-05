@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-export const Profile = () => {
+const Profile = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -99,3 +99,4 @@ const InputField = ({ label, value }) => (
     />
   </div>
 );
+export default Profile;

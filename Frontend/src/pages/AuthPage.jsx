@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Login } from "./Login";
-import { Register } from "./Register";
+import Login from "./Login";
+import Register from "./Register";
 
-export const AuthPage = () => {
+const AuthPage = () => {
   const [isRegistering, setIsRegistering] = useState(false);
 
   return (
@@ -15,3 +15,4 @@ export const AuthPage = () => {
     </div>
   );
 };
+export default AuthPage;
