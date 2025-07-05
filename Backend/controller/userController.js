@@ -1,9 +1,9 @@
-// controllers/userController.js
-
 import userModel from "../schema/userModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import { createUserToken } from "../utils/auth.js";
+import jwt from "jsonwebtoken";
+
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -109,11 +109,15 @@ const getProfile = async (req, res) => {
 
 const editUser = async (req, res) => {
   try {
-    const { name, password } = req.body;
-    const userId = req.user.id; // assumes you're using auth middleware that attaches `req.user`
+    const { name, password, phone, district, division } = req.body;
+    const userId = req.user.id;
 
     const updates = {};
-    if (name) updates.name = name;
+
+    if (name !== undefined) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (district !== undefined) updates.district = district;
+    if (division !== undefined) updates.division = division;
 
     if (password) {
       if (password.length < 9) {
@@ -135,15 +139,14 @@ const editUser = async (req, res) => {
     res.json({
       success: true,
       message: "User updated successfully",
-      user: {
-        name: updatedUser.name,
-        email: updatedUser.email,
-      },
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+
 
 export { registerUser, loginUser, loginAdmin, getProfile, editUser };

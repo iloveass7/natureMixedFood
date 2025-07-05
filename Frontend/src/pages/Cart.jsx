@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 
-export const Cart = ({ isOpen, onClose }) => {
+const Cart = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   if (!isOpen) return null;
 
@@ -72,3 +72,4 @@ export const Cart = ({ isOpen, onClose }) => {
     </div>
   );
 };
+export default Cart;

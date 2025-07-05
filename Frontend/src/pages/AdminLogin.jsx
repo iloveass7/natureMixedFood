@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Login = () => {
+const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,50 +15,30 @@ const Login = () => {
     setError("");
 
     try {
-      const { data } = await axios.post(
-        "http://localhost:8000/api/user/login",
-        {
-          email,
-          password,
-        }
-      );
+      const { data } = await axios.post("http://localhost:8000/api/admin/login", {
+        email,
+        password,
+      });
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userData", JSON.stringify(data.user));
-        navigate("/");
+        localStorage.setItem("adminToken", data.token);
+        navigate("/admin");
       } else {
-        setError(data.message || "Login failed");
+        setError(data.message || "Admin login failed");
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Please try again."
-      );
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Add guest login functionality
-  const guestHandler = () => {
-    const guestUser = {
-      id: "guest",
-      name: "Guest",
-      profileImage: "",
-      token: "",
-      isGuest: true,
-      cartData: {},
-    };
-    localStorage.setItem("userData", JSON.stringify(guestUser));
-    navigate("/");
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 bg-white">
-      <div className="max-w-2xl py-32 w-full space-y-10 bg-white p-8 rounded-lg border border-gren-800 shadow-lg">
+      <div className="max-w-2xl py-32 w-full space-y-10 bg-white p-8 rounded-lg border border-green-800 shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-[1.7rem] font-extrabold text-gray-900">
-            Sign in to your account
+            Admin Login
           </h2>
         </div>
         {error && (
@@ -76,14 +56,14 @@ const Login = () => {
                 htmlFor="email"
                 className="block text-lg font-medium text-gray-700 mb-1"
               >
-                Email address
+                Admin Email
               </label>
               <input
                 type="email"
                 id="email"
                 required
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-400 focus:border-green-400 focus:z-10 sm:text-sm"
-                placeholder="johndoe@example.com"
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -100,7 +80,7 @@ const Login = () => {
                 id="password"
                 required
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-400 focus:border-green-400 focus:z-10 sm:text-sm"
-                placeholder="Top secret"
+                placeholder="Super secret"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -115,31 +95,22 @@ const Login = () => {
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Logging in..." : "Admin Login"}
             </button>
           </div>
         </form>
 
         <div className="text-center text-lg text-gray-600">
-          <p>
-            Don't have an account?{" "}
-            <button
-              onClick={() => navigate("/register")}
-              className="font-medium text-green-700 hover:text-amber-600 cursor-pointer"
-            >
-              Register
-            </button>{" "}
-            or{" "}
-            <button
-              onClick={guestHandler}
-              className="font-medium text-amber-500 hover:text-green-400  cursor-pointer"
-            >
-              Continue as guest
-            </button>
-          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="font-medium text-green-700 hover:text-amber-600 cursor-pointer"
+          >
+            Go back to User Login
+          </button>
         </div>
       </div>
     </div>
   );
 };
-export default Login;
+
+export default AdminLogin;

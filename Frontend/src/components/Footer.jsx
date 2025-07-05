@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone } from 'lucide-react';
 
-export const Footer = () => {
+const Footer = () => {
   return (
     <footer className="bg-green-900 text-white w-full">
       {/* MAIN CONTAINER - Only changes padding for mobile */}
@@ -66,3 +66,4 @@ export const Footer = () => {
     </footer>
   );
 };
+export default Footer;

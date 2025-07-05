@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 
-export const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery, handleSearch }) => {
+const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery, handleSearch }) => {
     if (!isOpen) return null;
 
     return (
@@ -68,3 +68,4 @@ export const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery, ha
         </div>
     );
 };
+export default SearchSidebar;
