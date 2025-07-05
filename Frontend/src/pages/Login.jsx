@@ -15,20 +15,25 @@ export const Login = () => {
     setError("");
 
     try {
-      const { data } = await axios.post("http://localhost:8000/api/user/login", {
-        email,
-        password
-      });
+      const { data } = await axios.post(
+        "http://localhost:8000/api/user/login",
+        {
+          email,
+          password,
+        }
+      );
 
       if (data.success) {
-        localStorage.setItem("authToken", data.token);
+        localStorage.setItem("token", data.token);
         localStorage.setItem("userData", JSON.stringify(data.user));
         navigate("/");
       } else {
         setError(data.message || "Login failed");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setError(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -42,10 +47,10 @@ export const Login = () => {
       profileImage: "",
       token: "",
       isGuest: true,
-      cartData: {}
+      cartData: {},
     };
     localStorage.setItem("userData", JSON.stringify(guestUser));
-    navigate("/"); // Redirect to home after guest login
+    navigate("/");
   };
 
   return (
@@ -61,10 +66,16 @@ export const Login = () => {
             {error}
           </div>
         )}
-        <form className="border-transparent mt-8 space-y-6" onSubmit={loginHandler}>
+        <form
+          className="border-transparent mt-8 space-y-6"
+          onSubmit={loginHandler}
+        >
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="email"
+                className="block text-lg font-medium text-gray-700 mb-1"
+              >
                 Email address
               </label>
               <input
@@ -78,7 +89,10 @@ export const Login = () => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-lg font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-lg font-medium text-gray-700 mb-1"
+              >
                 Password
               </label>
               <input
@@ -97,9 +111,11 @@ export const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-lg font-medium rounded-md text-white bg-green-700 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-lg font-medium rounded-md text-white bg-green-700 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>
@@ -108,7 +124,7 @@ export const Login = () => {
           <p>
             Don't have an account?{" "}
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate("/register")}
               className="font-medium text-green-700 hover:text-amber-600 cursor-pointer"
             >
               Register
