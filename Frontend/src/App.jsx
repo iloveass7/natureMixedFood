@@ -12,6 +12,12 @@ import { Cart } from "./pages/Cart";
 import { SearchSidebar } from "./components/SearchSidebar";
 import ProductDetails from "./pages/ProductDetails";
 import CheckoutPage from "./pages/CheckoutPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import AddBlog from "./pages/Admin/AddBlog";
+import AddProduct from "./pages/Admin/AddProduct";
+import EditImages from "./pages/Admin/EditImages";
+import OrderList from "./pages/Admin/OrderList";
+
 const App = () => {
   return (
     <Router>
@@ -27,6 +33,11 @@ const App = () => {
         <Route path="/search" element={<SearchSidebar />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/add-blog" element={<AddBlog />} />
+        <Route path="/admin/add-product" element={<AddProduct />} />
+        <Route path="/admin/edit-images" element={<EditImages />} />
+        <Route path="/admin/orders" element={<OrderList />} />
 
       </Routes>
 

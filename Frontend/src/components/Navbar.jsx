@@ -40,7 +40,7 @@ export const Navbar = () => {
           </div>
 
           {/* Center - Links */}
-        <ul className="hidden md:flex flex-1 justify-center gap-10 text-[1.5rem] font-semibold md:text-[1.3rem] md:pt-auto lg:text-[1.rem]">
+        <ul className="hidden md:flex flex-1 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] md:pt-auto lg:text-[1.5rem]">
             <li><Link to="/" className="hover:text-yellow-500">Home</Link></li>
             <li><Link to="/blogs" className="hover:text-yellow-500">Blogs</Link></li>
             <li><Link to="/about" className="hover:text-yellow-500">About</Link></li>
@@ -58,7 +58,7 @@ export const Navbar = () => {
           {/* Right - Icons */}
           <div className="flex-1 flex justify-end items-center gap-10 md:gap-6 lg:gap-10 ">
             <button onClick={() => setSearchOpen(true)} title="Search" className="hover:text-yellow-500">
-              <Search size={33} />
+              <Search size={31} />
             </button>
 
             {isLoggedIn && (
