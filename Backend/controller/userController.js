@@ -1,11 +1,9 @@
+// controllers/userController.js
+
 import userModel from "../schema/userModel.js";
 import validator from "validator";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-
-const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET);
-};
+import { createUserToken } from "../utils/auth.js";
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -18,7 +16,9 @@ const loginUser = async (req, res) => {
     if (!isMatch) {
       return res.json({ success: false, message: "Invalid credentials" });
     }
-    const token = createToken(user._id);
+    const token = createUserToken(user._id);
+    // console.log(token);
+    // console.log("JWT_SECRET:", process.env.JWT_SECRET);
     res.json({
       success: true,
       token,
@@ -44,7 +44,7 @@ const registerUser = async (req, res) => {
     if (!validator.isEmail(email)) {
       return res.json({ success: false, message: "Invalid email" });
     }
-    if (password.length < 9) {
+    if (password.length < 8) {
       return res.json({
         success: false,
         message: "Password must be at least 8 characters",
@@ -58,7 +58,7 @@ const registerUser = async (req, res) => {
       password: hashPassword,
     });
     await user.save();
-    const token = createToken(user._id);
+    const token = createUserToken(user._id); // Use the function for user token
     res.json({
       success: true,
       token,
@@ -73,7 +73,6 @@ const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    let payload = { email } + { password };
     if (
       email === process.env.ADMIN_EMAIL &&
       password === process.env.ADMIN_PASSWORD
@@ -81,7 +80,6 @@ const loginAdmin = async (req, res) => {
       const token = jwt.sign({ email }, process.env.JWT_ADMIN_SECRET, {
         expiresIn: "1h",
       });
-
       return res.json({
         success: true,
         token,
@@ -97,4 +95,55 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, loginAdmin };
+const getProfile = async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      user: req.user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const editUser = async (req, res) => {
+  try {
+    const { name, password } = req.body;
+    const userId = req.user.id; // assumes you're using auth middleware that attaches `req.user`
+
+    const updates = {};
+    if (name) updates.name = name;
+
+    if (password) {
+      if (password.length < 9) {
+        return res.status(400).json({
+          success: false,
+          message: "Password must be at least 8 characters",
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(password, salt);
+    }
+
+    const updatedUser = await userModel.findByIdAndUpdate(
+      userId,
+      { $set: updates },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "User updated successfully",
+      user: {
+        name: updatedUser.name,
+        email: updatedUser.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export { registerUser, loginUser, loginAdmin, getProfile, editUser };

@@ -1,14 +1,51 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 export const Profile = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:8000/api/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.success) {
+          setUser(response.data.user);
+        } else {
+          console.log("Unauthorized or failed");
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (!user) {
+    return (
+      <p className="text-center mt-10 text-lg text-gray-600">
+        Loading profile...
+      </p>
+    );
+  }
+
   return (
     <div className="mb-6 bg-gradient-to-br from-white to-green-100 flex justify-center items-center p-4">
       <div className="mx-45 w-full max-w-8xl my-6 pb-4 bg-white rounded-3xl shadow-lg overflow-hidden">
-        
         {/* Top Accent Header */}
         <div className="bg-green-800 px-6 py-8 flex flex-col justify-center">
-          <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-amber-400 px-5">Welcome, Alexa</h1>
-          <p className="text-white text-xl sm:text-2xl font-semibold mt-2 px-5">Tue, 07 June 2022</p>
+          <h1 className="text-[2rem] sm:text-[2.5rem] font-bold text-amber-400 px-5">
+            Welcome, {user.name}
+          </h1>
+          <p className="text-white text-xl sm:text-2xl font-semibold mt-2 px-5">
+            {new Date().toDateString()}
+          </p>
         </div>
 
         {/* Profile Info Section */}
@@ -20,11 +57,12 @@ export const Profile = () => {
           />
 
           <div className="text-center lg:text-left flex-1 py-4 lg:py-7 px-2 lg:px-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-green-700 mb-2">Alexa Rawles</h2>
-            <p className="text-gray-500 text-lg">alexarawles@gmail.com</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-green-700 mb-2">
+              {user.name}
+            </h2>
+            <p className="text-gray-500 text-lg">{user.email}</p>
           </div>
 
-          {/* Edit Button - adjusts position on small screens */}
           <div className="lg:ml-auto mt-4 lg:mt-6">
             <button className="bg-green-700 hover:bg-amber-400 text-white text-lg font-semibold px-6 py-2 rounded transition">
               Edit
@@ -35,12 +73,12 @@ export const Profile = () => {
         {/* Form Fields Section */}
         <div className="px-6 sm:px-10 pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-green-700">
-            <InputField label="Full Name" />
-            <InputField label="Phone Number" />
-            <InputField label="Email Address" />
-            <InputField label="District" />
-            <InputField label="Division" />
-            <InputField label="Blood Group" />
+            <InputField label="Full Name" value={user.name} />
+            <InputField label="Phone Number" value={"N/A"} />
+            <InputField label="Email Address" value={user.email} />
+            <InputField label="District" value={"N/A"} />
+            <InputField label="Division" value={"N/A"} />
+            <InputField label="Blood Group" value={"N/A"} />
           </div>
         </div>
       </div>
@@ -48,14 +86,16 @@ export const Profile = () => {
   );
 };
 
-// Reusable Input Field
-const InputField = ({ label }) => (
+const InputField = ({ label, value }) => (
   <div>
-    <label className="block text-lg font-medium text-green-700 mb-2">{label}</label>
+    <label className="block text-lg font-medium text-green-700 mb-2">
+      {label}
+    </label>
     <input
       type="text"
-      placeholder="Enter here"
-      className="w-full border border-green-800 rounded px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400 hover:bg-green-50"
+      value={value}
+      readOnly
+      className="w-full border border-green-800 rounded px-4 py-3 text-gray-700 bg-gray-100 focus:outline-none"
     />
   </div>
 );
