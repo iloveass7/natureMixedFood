@@ -21,7 +21,8 @@ import AddProduct from "./pages/Admin/AddProduct";
 import EditImages from "./pages/Admin/EditImages";
 import OrderList from "./pages/Admin/OrderList";
 import AdminLogin from "./pages/AdminLogin";
-import AdminPrivateRoute from "./components/AdminPrivateRoute"; // ✅ NEW
+import AdminPrivateRoute from "./components/AdminPrivateRoute";
+import AllBlogs from "./pages/AllBlogs";
 
 const App = () => {
   return (
@@ -43,6 +44,7 @@ const App = () => {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/blogs" element={<AllBlogs />} />
 
         {/* Protected Admin Routes */}
         <Route

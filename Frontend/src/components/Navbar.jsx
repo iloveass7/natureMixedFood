@@ -19,7 +19,7 @@ const Navbar = () => {
     : null;
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userData');
     localStorage.removeItem('adminToken');
     navigate('/login');
