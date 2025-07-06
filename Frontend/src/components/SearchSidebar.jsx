@@ -16,7 +16,6 @@ const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery }) => {
           const res = await axios.get(
             `http://localhost:8000/api/product/searchProducts?q=${searchQuery}`
           );
-
           setResults(res.data);
         } catch (err) {
           console.error("Search failed", err);
@@ -50,14 +49,14 @@ const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery }) => {
                 </h2>
                 <button
                   type="button"
-                  className="text-amber-400 hover:text-green-700"
+                  className="text-amber-500 hover:text-green-700"
                   onClick={onClose}
                 >
                   <X size={24} />
                 </button>
               </div>
 
-              {/* Input (no form needed) */}
+              {/* Input */}
               <div className="px-3 mt-4 flex">
                 <input
                   type="text"
@@ -77,33 +76,38 @@ const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery }) => {
               ) : searchQuery ? (
                 results.length > 0 ? (
                   <div className="space-y-4">
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-gray-900 mx-3 text-xl">
                       Results for "{searchQuery}"
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {results.map((product) => (
                         <div
                           key={product._id}
-                          className="p-3 hover:bg-gray-100 rounded cursor-pointer border"
+                          className="mx-3 flex items-center gap-4 p-3 bg-white shadow-lg rounded hover:bg-green-200 cursor-pointer transition"
                           onClick={() => {
                             navigate(`/product/${product._id}`);
                             onClose();
                           }}
                         >
-                          <p className="font-medium text-green-800">
-                            {product.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {product.description?.slice(0, 70)}...
-                          </p>
+                          <img
+                            src={product.images?.[0]}
+                            alt={product.name}
+                            className="w-16 h-16 object-cover rounded border"
+                          />
+                          <div className="flex flex-col justify-center">
+                            <p className="text-green-900 font-semibold text-md text-lg">
+                              {product.name}
+                            </p>
+                            <p className="text-gray-600 font-bold text-sm mt-1">
+                              ${product.price}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-gray-500">
-                    No products found.
-                  </p>
+                  <p className="text-center text-gray-500">No products found.</p>
                 )
               ) : (
                 <div className="text-center text-gray-500 justify-center flex items-center h-full">
