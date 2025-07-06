@@ -1,20 +1,36 @@
 import blogModel from "../schema/blogSchema.js";
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
 
 const createBlog = async (req, res) => {
   try {
-    const { title, description, image } = req.body;
+    const { title, description } = req.body;
 
-    if (!title || !description || !image) {
+    if (!title || !description || !req.file) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const newBlog = new blogModel({ title, description, image });
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "blogs",
+    });
+
+    // Delete local file after upload
+    fs.unlinkSync(req.file.path);
+
+    const newBlog = new blogModel({
+      title,
+      description,
+      image: result.secure_url,
+    });
+
     await newBlog.save();
 
     res
       .status(201)
       .json({ message: "Blog created successfully", blog: newBlog });
   } catch (error) {
+    console.error("Blog creation error:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };

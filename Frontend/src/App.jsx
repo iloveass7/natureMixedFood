@@ -96,7 +96,6 @@ const App = () => {
             </AdminPrivateRoute>
           }
         />
-
       </Routes>
       <Footer />
     </Router>
@@ -104,4 +103,3 @@ const App = () => {
 };
 
 export default App;
-
