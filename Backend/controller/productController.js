@@ -120,4 +120,31 @@ const singleProduct = async (req, res) => {
   }
 };
 
-export { addProduct, getAllProducts, removeProduct, singleProduct };
+const searchProducts = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim() === "") {
+      return res.status(400).json({ message: "No search query provided" });
+    }
+
+    const products = await productModel.find({
+      name: { $regex: q, $options: "i" }, // case-insensitive search
+    });
+
+    res.status(200).json(products);
+  } catch (err) {
+    console.error("Error in searchProducts:", err.message);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+export {
+  addProduct,
+  getAllProducts,
+  removeProduct,
+  singleProduct,
+  searchProducts,
+};
