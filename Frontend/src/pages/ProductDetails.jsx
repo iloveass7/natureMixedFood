@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ShoppingCart, Lock, Truck, Leaf } from "lucide-react";
+import Loader from "../components/Loader";
 
 const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -31,7 +32,7 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id]);
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (loading) return <Loader />;
   if (error) return <div className="text-center text-red-500 py-10">{error}</div>;
   if (!product) return <div className="text-center py-10">Product not found</div>;
 

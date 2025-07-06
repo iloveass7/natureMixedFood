@@ -21,9 +21,10 @@ import AddProduct from "./pages/Admin/AddProduct";
 import EditImages from "./pages/Admin/EditImages";
 import OrderList from "./pages/Admin/OrderList";
 import AdminLogin from "./pages/AdminLogin";
-import EditProduct from "./pages/Admin/EditProduct"; // Assuming this is a component for editing products
+import EditProduct from "./pages/Admin/EditProduct";
 import AdminPrivateRoute from "./components/AdminPrivateRoute";
 import AllBlogs from "./pages/AllBlogs";
+import Loader from "./components/Loader"; 
 
 const App = () => {
   return (
@@ -46,6 +47,7 @@ const App = () => {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/blogs" element={<AllBlogs />} />
+        <Route path="/loader" element={<Loader />} />
 
         {/* Protected Admin Routes */}
         <Route

@@ -25,7 +25,6 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  // Listen for sidebar state via custom event
   useEffect(() => {
     const handleToggle = (e) => {
       setShowChatIcons(!e.detail);
