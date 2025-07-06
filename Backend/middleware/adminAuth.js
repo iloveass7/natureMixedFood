@@ -4,7 +4,7 @@ const adminAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res
         .status(401)
         .json({ message: "Unauthorized: No token provided" });
@@ -15,13 +15,23 @@ const adminAuth = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_ADMIN_SECRET);
 
     if (decoded.email !== process.env.ADMIN_EMAIL) {
-      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Invalid token owner" });
     }
 
+    // Optionally attach admin data to request
+    req.admin = decoded;
     next();
   } catch (error) {
-    console.log("Auth Error:", error.message);
-    res.status(500).json({ message: "Internal server error" });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Unauthorized: Token expired" });
+    } else if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    } else {
+      console.error("Auth Error:", error.message);
+      return res.status(500).json({ message: "Internal server error" });
+    }
   }
 };
 

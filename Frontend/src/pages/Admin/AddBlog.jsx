@@ -1,13 +1,13 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 const AddBlog = () => {
-  const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [date, setDate] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [date, setDate] = useState("");
+  const [content, setContent] = useState("");
   const [featuredImage, setFeaturedImage] = useState(null);
-  const [tags, setTags] = useState('');
-  const [metaDescription, setMetaDescription] = useState('');
+  const [tags, setTags] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
 
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
@@ -15,19 +15,42 @@ const AddBlog = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Submit logic here
-    console.log({
-      title,
-      author,
-      date,
-      content,
-      featuredImage,
-      tags: tags.split(',').map(tag => tag.trim()),
-      metaDescription
-    });
-    alert('Blog post added successfully!');
+
+    if (!title || !content || !featuredImage) {
+      alert("Title, content and image are required");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", content);
+    formData.append("image", featuredImage);
+
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      const res = await fetch("http://localhost:8000/api/blog/create", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Blog post added successfully!");
+        // optionally reset form
+      } else {
+        alert(data.message || "Failed to add blog post");
+      }
+    } catch (error) {
+      console.error("Error creating blog:", error);
+      alert("Something went wrong!");
+    }
   };
 
   return (
@@ -65,7 +88,9 @@ const AddBlog = () => {
               />
             </div>
             <div>
-              <label className="block font-bold mb-2 text-xl">Publish Date*</label>
+              <label className="block font-bold mb-2 text-xl">
+                Publish Date*
+              </label>
               <input
                 type="date"
                 value={date}
@@ -78,7 +103,9 @@ const AddBlog = () => {
 
           {/* Featured Image */}
           <div>
-            <label className="block font-bold mb-2 text-xl">Featured Image</label>
+            <label className="block font-bold mb-2 text-xl">
+              Featured Image
+            </label>
             <div className="flex items-center gap-6 mb-2">
               <input
                 type="file"
