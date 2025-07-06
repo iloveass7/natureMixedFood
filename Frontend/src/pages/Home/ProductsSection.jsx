@@ -5,7 +5,18 @@ const ProductsSection = ({ products, loading }) => {
   const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
 
-  const visibleProducts = showAll ? products : products.slice(0, 5);
+  // Determine the number of products per row based on screen size
+  const getProductsPerRow = () => {
+    if (typeof window === 'undefined') return 4; // Default for SSR
+    if (window.innerWidth >= 1024) return 4; // lg:grid-cols-4
+    if (window.innerWidth >= 640) return 2; // sm:grid-cols-2
+    return 1; // grid-cols-1
+  };
+
+  const productsPerRow = getProductsPerRow();
+  const maxVisibleWithoutButton = productsPerRow * 2; // Two rows worth of products
+  const shouldShowButton = products.length > maxVisibleWithoutButton;
+  const visibleProducts = showAll ? products : products.slice(0, maxVisibleWithoutButton);
 
   if (loading) {
     return <div className="w-full text-center py-10">Loading products...</div>;
@@ -29,10 +40,16 @@ const ProductsSection = ({ products, loading }) => {
                 onClick={() => navigate(`/product/${product._id}`)}
                 className="h-142 relative w-full rounded-xl px-6 py-10 flex flex-col items-center shadow-2xl bg-white transition-all duration-300 hover:shadow-4xl hover:-translate-y-2 cursor-pointer"
               >
-                {/* Badge */}
-                <span className="absolute top-7 left-5 bg-amber-400 font-semibold text-white text-[16px] px-6 py-1 rounded-full shadow">
-                  Featured
-                </span>
+                {/* Badge - Conditional rendering based on product properties */}
+                {product.bestSeller ? (
+                  <span className="absolute top-7 left-5 bg-green-700 font-semibold text-white text-[16px] px-8 py-1 rounded-full shadow">
+                    Best Seller
+                  </span>
+                ) : (
+                  <span className="absolute top-7 left-5 bg-amber-400 font-semibold text-white text-[16px] px-5 py-1 rounded-full shadow">
+                    Premium Quality
+                  </span>
+                )}
 
                 {/* Product Image */}
                 <img
@@ -70,11 +87,11 @@ const ProductsSection = ({ products, loading }) => {
             ))}
           </div>
 
-          {/* Show More/Less Button */}
-          {products.length > 5 && (
-            <div className="flex justify-end">
+          {/* Show More/Less Button - only shown when products exceed two rows */}
+          {shouldShowButton && (
+            <div className="flex justify-center">
               <button
-                className="bg-green-700 text-white px-8 py-2 rounded font-medium hover:bg-yellow-500 transition mb-6"
+                className="bg-green-700 text-white px-8 py-2 rounded text-lg font-medium hover:bg-yellow-500 transition mb-6"
                 onClick={() => setShowAll(!showAll)}
               >
                 {showAll ? "Show Less" : "Show More"}
@@ -86,4 +103,5 @@ const ProductsSection = ({ products, loading }) => {
     </section>
   );
 };
+
 export default ProductsSection;

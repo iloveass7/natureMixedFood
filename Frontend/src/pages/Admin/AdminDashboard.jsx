@@ -4,6 +4,7 @@ import AddBlog from "./AddBlog";
 import AddProduct from "./AddProduct";
 import EditImages from "./EditImages";
 import OrderList from "./OrderList";
+import EditProduct from "./EditProduct";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("orders");
@@ -38,6 +39,15 @@ const AdminDashboard = () => {
 
           <button
             className={`border border-green-800 w-full text-left px-4 py-3 font-semibold rounded text-lg hover:bg-green-200 hover:text-black ${
+              activeTab === "modify" ? "bg-green-800 text-white" : ""
+            }`}
+            onClick={() => setActiveTab("modify")}
+          >
+            Edit Products
+          </button>
+          
+          <button
+            className={`border border-green-800 w-full text-left px-4 py-3 font-semibold rounded text-lg hover:bg-green-200 hover:text-black ${
               activeTab === "images" ? "bg-green-800 text-white" : ""
             }`}
             onClick={() => setActiveTab("images")}
@@ -53,6 +63,7 @@ const AdminDashboard = () => {
           >
             Add Blogs
           </button>
+
         </div>
 
         {/* Logout Button */}
@@ -67,6 +78,7 @@ const AdminDashboard = () => {
       <div className="flex-1 p-6 md:p-12">
         {activeTab === "orders" && <OrderList />}
         {activeTab === "add" && <AddProduct />}
+        {activeTab === "modify" && <EditProduct />}
         {activeTab === "images" && <EditImages />}
         {activeTab === "blogs" && <AddBlog />}
       </div>

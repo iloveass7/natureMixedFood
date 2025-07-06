@@ -71,6 +71,58 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, bestSeller } = req.body;
+    const images = req.files;
+
+    const product = await productModel.findById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    let updatedImages = product.images;
+
+    // If new images are uploaded
+    if (images && Object.keys(images).length > 0) {
+      // Delete old images from Cloudinary
+      const deletePromises = product.images.map((imgUrl) => {
+        const publicId = imgUrl.split("/").pop().split(".")[0];
+        return cloudinary.uploader.destroy(publicId);
+      });
+      await Promise.all(deletePromises);
+
+      // Upload new images
+      const imageFiles = Object.values(images).flat();
+      const newImageUrls = await Promise.all(
+        imageFiles.map(async (file) => {
+          const uploaded = await cloudinary.uploader.upload(file.path, {
+            resource_type: "image",
+          });
+          return uploaded.secure_url;
+        })
+      );
+
+      updatedImages = newImageUrls;
+    }
+
+    const updatedProduct = await productModel.findByIdAndUpdate(
+      id,
+      {
+        name,
+        description,
+        price,
+        bestSeller,
+        images: updatedImages,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Product updated", product: updatedProduct });
+  } catch (err) {
+    console.error("Error in updateProduct:", err.message);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
 const removeProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -100,7 +152,6 @@ const removeProduct = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-
 const singleProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -119,5 +170,4 @@ const singleProduct = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-
-export { addProduct, getAllProducts, removeProduct, singleProduct };
+export { addProduct, getAllProducts,  updateProduct, removeProduct, singleProduct };
