@@ -7,6 +7,7 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isZoomed, setIsZoomed] = useState(false);
   const { id } = useParams();
 
   useEffect(() => {
@@ -44,7 +45,8 @@ const ProductDetails = () => {
             <img
               src={product.images[selectedImage]}
               alt={product.name}
-              className="object-contain max-h-full max-w-full"
+              className="object-contain max-h-full max-w-full cursor-zoom-in"
+              onClick={() => setIsZoomed(true)}
             />
           </div>
 
@@ -55,9 +57,8 @@ const ProductDetails = () => {
                 key={idx}
                 src={img}
                 alt={`thumb-${idx}`}
-                className={`w-21 h-21 object-cover cursor-pointer border ${
-                  selectedImage === idx ? "border-green-500" : "border-gray-300"
-                } rounded`}
+                className={`w-21 h-21 object-cover cursor-pointer border ${selectedImage === idx ? "border-green-500" : "border-gray-300"
+                  } rounded`}
                 onClick={() => setSelectedImage(idx)}
               />
             ))}
@@ -65,39 +66,37 @@ const ProductDetails = () => {
         </div>
 
         {/* RIGHT SECTION */}
-        <div className="w-full lg:w-1/2 h-[700px] flex flex-col justify-between">
-          <div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">{product.name}</h2>
-            <p className="text-green-700 text-xl font-semibold mb-6">
-              {product.bestSeller ? "Best Seller" : "Premium Quality"}
-            </p>
-            <hr className="border-green-700 mb-3" />
+        <div className="w-full lg:w-1/2 h-[700px] overflow-y-auto pr-2">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">{product.name}</h2>
+          <p className="text-green-700 text-xl font-semibold mb-6">
+            {product.bestSeller ? "Best Seller" : "Premium Quality"}
+          </p>
+          <hr className="border-green-700 mb-3" />
 
-            <div className="text-gray-700 text-xl leading-relaxed space-y-2">
-              {product.description.split("\n").map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-
-            <div className="text-2xl font-bold mt-6">${product.price}</div>
-
-            <div className="flex items-center gap-4 mt-4">
-              <label className="text-gray-600 text-xl font-semibold">Quantity:</label>
-              <select className="border border-gray-300 py-2 px-4 rounded hover:border-green-500">
-                {[1, 2, 3, 4, 5].map((qty) => (
-                  <option key={qty} value={qty}>
-                    {qty}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button className="mt-10 text-lg bg-green-600 hover:bg-amber-500 text-white w-full py-4 rounded font-bold flex items-center justify-center gap-2 transition">
-              <ShoppingCart size={20} /> Add to Cart
-            </button>
+          <div className="text-gray-700 text-xl leading-relaxed space-y-2">
+            {product.description.split("\n").map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
           </div>
 
-          {/* Feature Cards */}
+          <div className="text-2xl font-bold mt-6">${product.price}</div>
+
+          <div className="flex items-center gap-4 mt-4">
+            <label className="text-gray-600 text-xl font-semibold">Quantity:</label>
+            <select className="border border-gray-300 py-2 px-4 rounded hover:border-green-500">
+              {[1, 2, 3, 4, 5].map((qty) => (
+                <option key={qty} value={qty}>
+                  {qty}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button className="mt-10 text-lg bg-green-600 hover:bg-amber-500 text-white w-full py-4 rounded font-bold flex items-center justify-center gap-2 transition">
+            <ShoppingCart size={20} /> Add to Cart
+          </button>
+
+          {/* Feature Cards Included in Scroll */}
           <div className="flex flex-col space-y-3 mt-6">
             <div className="flex items-center gap-4 bg-gray-50 shadow-md rounded p-4 hover:bg-green-200">
               <div className="w-12 h-12 bg-white border rounded-full flex items-center justify-center">
@@ -133,6 +132,26 @@ const ProductDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Zoom Modal */}
+      {isZoomed && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center overflow-auto">
+          <div className="relative w-full h-full flex items-center justify-center p-6">
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-4 right-8 text-5xl text-amber-500 font-bold hover:text-red-600 z-50"
+              title="Close"
+            >
+              &times;
+            </button>
+            <img
+              src={product.images[selectedImage]}
+              alt="Zoomed"
+              className="max-h-[90vh] max-w-full object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

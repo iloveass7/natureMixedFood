@@ -25,11 +25,11 @@ const OrderList = () => {
 
   return (
     <div>
-      <h3 className="mt-1 text-4xl font-extrabold mb-9 text-green-800">Order Lists and Details</h3>
+      <h3 className="mt-1 text-4xl font-extrabold mb-9 text-green-800 mx-4">Order Lists and Details</h3>
 
       <div className="space-y-5">
         {orders.map((order) => (
-          <div key={order.id} className="border border-gray-300 rounded-lg py-5 px-6 shadow hover:shadow-lg transition">
+          <div key={order.id} className="border border-gray-300 rounded-lg py-5 px-6 mx-4 shadow-xl hover:shadow-2xl transition">
             
             <div className="flex justify-between items-center flex-wrap gap-4">
               <div>

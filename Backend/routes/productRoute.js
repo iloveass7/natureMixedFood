@@ -4,7 +4,9 @@ import {
   getAllProducts,
   removeProduct,
   singleProduct,
+  updateProduct,
   searchProducts,
+  
 } from "../controller/productController.js";
 import upload from "../middleware/multer.js";
 import adminAuth from "../middleware/adminAuth.js";
@@ -21,6 +23,7 @@ const uploadFields = upload.fields([
 
 productRouter.post("/addProduct", adminAuth, uploadFields, addProduct);
 productRouter.get("/getAllProducts", getAllProducts);
+productRouter.put("/updateProduct/:id", adminAuth, uploadFields, updateProduct);
 productRouter.delete("/removeProduct/:id", adminAuth, removeProduct);
 productRouter.get("/singleProduct/:id", singleProduct);
 productRouter.get("/searchProducts", searchProducts);
