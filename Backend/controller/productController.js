@@ -71,6 +71,7 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -123,6 +124,7 @@ const updateProduct = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err.message });
   }
 };
+
 const removeProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -152,6 +154,7 @@ const removeProduct = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
+
 const singleProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -170,4 +173,27 @@ const singleProduct = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-export { addProduct, getAllProducts,  updateProduct, removeProduct, singleProduct };
+
+const searchProducts = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim() === "") {
+      return res.status(400).json({ message: "No search query provided" });
+    }
+
+    const products = await productModel.find({
+      name: { $regex: q, $options: "i" }, // case-insensitive search
+    });
+
+    res.status(200).json(products);
+  } catch (err) {
+    console.error("Error in searchProducts:", err.message);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+export { addProduct, getAllProducts,  updateProduct, removeProduct, singleProduct, searchProducts, };
+
