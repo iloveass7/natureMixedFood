@@ -24,7 +24,7 @@ const Footer = () => {
           {/* Social + Contact Icons */}
           <div className="flex justify-center items-center flex-wrap justify-center gap-4 pt-2">
             <a
-              href="#"
+              href="https://www.facebook.com/naturemixedfood"
               className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-300 transition"
               title="Facebook"
             >
@@ -45,14 +45,14 @@ const Footer = () => {
               <Youtube size={26} />
             </a>
             <a
-              href="#"
+              href="naturemixedfood@gmail.com"
               className="p-2 bg-purple-600 text-white rounded-full hover:bg-purple-300 transition"
               title="Email"
             >
               <Mail size={26} />
             </a>
             <a
-              href="#"
+              href="+8801972-530207"
               className="p-2 bg-amber-600 text-white rounded-full hover:bg-amber-300 transition"
               title="Phone"
             >
@@ -64,9 +64,9 @@ const Footer = () => {
         {/* Right Section (Logo & Text) */}
         <div className="w-full lg:w-1/3 flex flex-col items-center text-center lg:items-center lg:text-left space-y-4">
           <img
-            src="/log.png"
+            src="/logo.png"
             alt="Company Logo"
-            className="w-58 sm:w-58 lg:w-58 lg:text-center object-contain"
+            className="w-28 sm:w-28 lg:w-28 lg:text-center object-contain"
           />
           <p className="text-center sm:text-[1.1rem] text-[1.05rem] text-white opacity-80 leading-relaxed">
             We are dedicated to delivering natural, handcrafted products right

@@ -39,7 +39,7 @@ const Navbar = () => {
         <div className="max-w-8xl mx-auto px-4 md:px-20 lg:px-30 py-4 flex items-center">
           <div className="flex-1 flex justify-start">
             <Link to="/">
-              <img src="log.png" alt="MyLogo" className="h-15 sm:h-20" />
+              <img src="logo.png" alt="MyLogo" className="h-15 sm:h-20 mx-10" />
             </Link>
           </div>
 

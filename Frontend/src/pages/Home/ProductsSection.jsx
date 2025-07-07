@@ -7,7 +7,7 @@ const ProductsSection = ({ products, loading }) => {
 
   // Determine the number of products per row based on screen size
   const getProductsPerRow = () => {
-    if (typeof window === 'undefined') return 4; // Default for SSR
+    if (typeof window === "undefined") return 4; // Default for SSR
     if (window.innerWidth >= 1024) return 4; // lg:grid-cols-4
     if (window.innerWidth >= 640) return 2; // sm:grid-cols-2
     return 1; // grid-cols-1
@@ -22,6 +22,68 @@ const ProductsSection = ({ products, loading }) => {
     return <div className="w-full text-center py-10">Loading products...</div>;
   }
 
+  const renderCard = (product) => (
+    <div
+      key={product._id}
+      onClick={() => navigate(`/product/${product._id}`)}
+      className="min-w-[80%] max-w-[90%] sm:min-w-0 sm:max-w-none h-[500px] w-full relative rounded-xl px-6 py-6 flex flex-col shadow-2xl bg-white transition-all duration-300 hover:shadow-4xl hover:-translate-y-2 cursor-pointer"
+    >
+      <div className="flex flex-col h-full justify-between overflow-hidden">
+        {/* Badge + Image */}
+        <div className="relative flex flex-col items-center">
+          {product.bestSeller ? (
+            <span className="absolute top-0 left-0 bg-green-700 font-semibold text-white text-[14px] px-4 py-1 rounded-full shadow">
+              Best Seller
+            </span>
+          ) : (
+            <span className="absolute top-0 left-0 bg-amber-400 font-semibold text-white text-[14px] px-4 py-1 rounded-full shadow">
+              Premium Quality
+            </span>
+          )}
+          <img
+            src={product.images[0] || "lg.png"}
+            alt={product.name}
+            className="w-44 h-44 object-contain mt-12 mb-4"
+          />
+        </div>
+
+        {/* Product Info */}
+        <div className="text-center px-1 mt-2 flex-1 overflow-hidden">
+          <h3
+            className="text-xl font-bold overflow-hidden leading-tight"
+            title={product.name}
+          >
+            {product.name.length > 15 ? product.name.slice(0, 15) + "..." : product.name}
+          </h3>
+
+
+          <p className="text-gray-500 text-[14px] mt-1">Delivered in 2-4 days</p>
+          <p className="text-[18px] font-bold mt-1">${product.price}</p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2 my-4">
+          <button
+            onClick={(e) => e.stopPropagation()}
+            className="w-full bg-yellow-500 text-white py-2 rounded font-medium hover:bg-green-100 hover:text-green-600 transition"
+          >
+            Add to Cart
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/checkout", { state: { product } });
+            }}
+            className="w-full bg-green-700 text-white py-2 rounded font-medium hover:bg-yellow-500 transition"
+          >
+            Buy Now
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+
   return (
     <section className="px-4 md:px-20 lg:px-40 py-2">
       <h2 className="text-[2.5rem] sm:text-[2.5rem] md:text-[2.8rem] font-bold mb-10 text-center text-green-900 hover:text-amber-400">
@@ -32,62 +94,19 @@ const ProductsSection = ({ products, loading }) => {
         <div className="text-center py-10">No products available</div>
       ) : (
         <>
-          {/* Grid Layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {/* Mobile Slider View */}
+          <div className="flex sm:hidden gap-4 overflow-x-auto pb-4 mb-12 px-1 snap-x snap-mandatory scroll-smooth">
             {visibleProducts.map((product) => (
-              <div
-                key={product._id}
-                onClick={() => navigate(`/product/${product._id}`)}
-                className="h-142 relative w-full rounded-xl px-6 py-10 flex flex-col items-center shadow-2xl bg-white transition-all duration-300 hover:shadow-4xl hover:-translate-y-2 cursor-pointer"
-              >
-                {/* Badge - Conditional rendering based on product properties */}
-                {product.bestSeller ? (
-                  <span className="absolute top-7 left-5 bg-green-700 font-semibold text-white text-[16px] px-8 py-1 rounded-full shadow">
-                    Best Seller
-                  </span>
-                ) : (
-                  <span className="absolute top-7 left-5 bg-amber-400 font-semibold text-white text-[16px] px-5 py-1 rounded-full shadow">
-                    Premium Quality
-                  </span>
-                )}
-
-                {/* Product Image */}
-                <img
-                  src={product.images[0] || "lg.png"}
-                  alt={product.name}
-                  className="w-56 h-56 object-contain mb-3 mt-12"
-                />
-
-                {/* Product Info */}
-                <h3 className="text-2xl font-bold mb-1">{product.name}</h3>
-                <p className="text-gray-500 text-[15px] mb-3">
-                  Delivered in 2-4 days
-                </p>
-                <p className="text-[20px] font-bold mb-0.5">${product.price}</p>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-3 w-full mt-4">
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-full bg-yellow-500 text-white py-2 rounded font-medium hover:bg-green-100 hover:text-green-600 transition"
-                  >
-                    Add to Cart
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/checkout', { state: { product } });
-                    }}
-                    className="w-full bg-green-700 text-white py-2 rounded font-medium hover:bg-yellow-500 transition"
-                  >
-                    Buy Now
-                  </button>
-                </div>
-              </div>
+              <div className="snap-center shrink-0">{renderCard(product)}</div>
             ))}
           </div>
 
-          {/* Show More/Less Button - only shown when products exceed two rows */}
+          {/* Grid View for Tablet/Desktop */}
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {visibleProducts.map((product) => renderCard(product))}
+          </div>
+
+          {/* Show More/Less Button */}
           {shouldShowButton && (
             <div className="flex justify-center">
               <button
