@@ -9,6 +9,7 @@ import productRouter from "./routes/productRoute.js";
 import blogRouter from "./routes/blogRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import userRoutes from "./routes/userRoute.js";
+import cardRouter from "./routes/cardRoute.js";
 import dotenv from "dotenv";
 //app congig
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/blog", blogRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/card", cardRouter);
 app.use("/api", userRoutes);
 
 app.listen(port, () => {
