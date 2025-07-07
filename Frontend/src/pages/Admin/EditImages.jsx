@@ -1,13 +1,63 @@
-import { useState } from 'react';
+import { useState } from "react";
+import axios from "axios";
 
 const EditImages = () => {
   const [bannerImage, setBannerImage] = useState(null);
   const [sliderImages, setSliderImages] = useState([]);
-  const [currentBanner, setCurrentBanner] = useState('https://images.unsplash.com/photo-1750875936215-0c35c1742cd6?q=80&w=688&auto=format&fit=crop');
+  const [currentBanner, setCurrentBanner] = useState(
+    "https://images.unsplash.com/photo-1750875936215-0c35c1742cd6?q=80&w=688&auto=format&fit=crop"
+  );
   const [currentSliders, setCurrentSliders] = useState([
-    'https://images.unsplash.com/photo-1750439889444-dad033c8e825?q=80&w=687&auto=format&fit=crop',
-    'https://plus.unsplash.com/premium_photo-1750353386208-7e189f9845ef?q=80&w=687&auto=format&fit=crop'
+    "https://images.unsplash.com/photo-1750439889444-dad033c8e825?q=80&w=687&auto=format&fit=crop",
+    "https://plus.unsplash.com/premium_photo-1750353386208-7e189f9845ef?q=80&w=687&auto=format&fit=crop",
   ]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      if (bannerImage) {
+        const bannerForm = new FormData();
+        bannerForm.append("image", bannerImage);
+
+        await axios.post("http://localhost:8000/api/card/banner", bannerForm, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      for (let i = 0; i < sliderImages.length; i++) {
+        const cardForm = new FormData();
+        cardForm.append("image", sliderImages[i]);
+        cardForm.append("title", `Slider Image ${i + 1}`);
+        cardForm.append(
+          "description",
+          `Auto generated slider description ${i + 1}`
+        );
+
+        await axios.post("http://localhost:8000/api/card/add", cardForm, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      alert("Images uploaded successfully!");
+      setBannerImage(null);
+      setSliderImages([]);
+    } catch (error) {
+      console.error(
+        "Image upload error:",
+        error.response?.data || error.message
+      );
+      alert("Image upload failed. Check console for details.");
+    }
+  };
 
   const handleBannerChange = (e) => {
     if (e.target.files[0]) {
@@ -33,18 +83,6 @@ const EditImages = () => {
     setCurrentSliders(newSliders);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Add your form submission logic here
-    console.log({
-      bannerImage,
-      sliderImages,
-      currentBanner,
-      currentSliders
-    });
-    alert('Image changes saved successfully!');
-  };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
       <div className="bg-white px-8 pb-8 rounded shadow-lg w-full max-w-8xl">
@@ -55,9 +93,11 @@ const EditImages = () => {
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Banner Section */}
           <div>
-            <label className="block font-bold mb-4 text-2xl">Banner Section Image</label>
+            <label className="block font-bold mb-4 text-2xl">
+              Banner Section Image
+            </label>
             <p className="mb-4 text-lg">Upload banner section image here.</p>
-            
+
             <div className="flex items-center gap-6 mb-4">
               <input
                 type="file"
@@ -75,17 +115,15 @@ const EditImages = () => {
             </div>
 
             <div className="flex flex-wrap gap-6 mb-8">
-              {/* Current Banner Preview */}
               <div className="rounded py-2">
                 <h5 className="font-semibold text-xl mb-2">Current Banner</h5>
-                <img 
-                  src={currentBanner} 
-                  alt="Current Banner" 
+                <img
+                  src={currentBanner}
+                  alt="Current Banner"
                   className="w-150 h-100 object-cover rounded"
                 />
               </div>
 
-              {/* New Banner Preview */}
               {bannerImage && (
                 <div className="rounded py-2">
                   <h5 className="font-semibold text-xl mb-2">New Banner</h5>
@@ -103,9 +141,11 @@ const EditImages = () => {
 
           {/* Slider Section */}
           <div>
-            <label className="block font-bold mb-4 text-2xl">Slider Section Images</label>
+            <label className="block font-bold mb-4 text-2xl">
+              Slider Section Images
+            </label>
             <p className="mb-4 text-lg">Upload slider section images here.</p>
-            
+
             <div className="flex items-center gap-6 mb-4">
               <input
                 type="file"
@@ -122,16 +162,22 @@ const EditImages = () => {
                 Add Slider Images
               </label>
               <span className="text-gray-600">
-                {sliderImages.length > 0 ? `${sliderImages.length} new file(s) selected` : "No new files chosen"}
+                {sliderImages.length > 0
+                  ? `${sliderImages.length} new file(s) selected`
+                  : "No new files chosen"}
               </span>
             </div>
 
-            {/* Current Sliders */}
             <div className="rounded py-2 mb-6">
-              <h5 className="font-semibold text-xl mb-4">Current Slider Images</h5>
+              <h5 className="font-semibold text-xl mb-4">
+                Current Slider Images
+              </h5>
               <div className="flex gap-4 flex-wrap">
                 {currentSliders.map((img, idx) => (
-                  <div key={`current-${idx}`} className="relative group rounded">
+                  <div
+                    key={`current-${idx}`}
+                    className="relative group rounded"
+                  >
                     <img
                       src={img}
                       alt={`Slider ${idx + 1}`}
@@ -150,10 +196,11 @@ const EditImages = () => {
               </div>
             </div>
 
-            {/* New Slider Previews */}
             {sliderImages.length > 0 && (
               <div className="rounded py-2 mb-8">
-                <h5 className="font-semibold text-xl mb-4">New Slider Images Preview</h5>
+                <h5 className="font-semibold text-xl mb-4">
+                  New Slider Images Preview
+                </h5>
                 <div className="flex gap-4 flex-wrap">
                   {sliderImages.map((img, idx) => (
                     <div key={`new-${idx}`} className="relative group rounded">
@@ -177,7 +224,6 @@ const EditImages = () => {
             )}
           </div>
 
-          {/* Submit Button */}
           <div className="pt-4">
             <button
               type="submit"
