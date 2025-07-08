@@ -107,9 +107,9 @@ const EditProduct = () => {
       {visibleProducts.map((product) => (
         <div
           key={product._id}
-          className="border border-gray-300 rounded-lg px-6 mx-1 my-7 py-8 shadow-xl hover:shadow-2xl transition"
+          className="border border-gray-300 rounded-lg px-6 my-7 py-8 shadow-xl hover:shadow-2xl transition"
         >
-          <div className="flex gap-4">
+<div className="flex flex-col sm:flex-row gap-4">
             <img
               src={product.images[0]}
               alt="Product"
@@ -117,20 +117,30 @@ const EditProduct = () => {
             />
             <div className="flex flex-col justify-between w-full">
               <div>
-                <h3 className="text-3xl font-bold mb-2 text-green-800">{product.name}</h3>
-<p
-  className="text-gray-700 mb-2 text-xl overflow-hidden break-words"
+                <h3
+  className="text-2xl sm:text-3xl font-bold mb-2 text-green-800 break-words"
   style={{
-    display: "-webkit-box",
-    WebkitBoxOrient: "vertical",
-    WebkitLineClamp: 3,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
     wordBreak: "break-word",
+    overflowWrap: "break-word",
+    hyphens: "auto",
   }}
 >
-  {product.description}
-</p>
+  {product.name}
+</h3>
+
+                <p
+                  className="text-gray-700 mb-2 text-xl overflow-hidden break-words"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {product.description}
+                </p>
 
 
 
@@ -195,7 +205,7 @@ const EditProduct = () => {
                   }
                 />
               </div>
-              
+
               <div className="mb-6">
                 <label className="block font-bold mb-4 text-2xl">Product Images (Multiple Allowed)</label>
                 <div className="flex items-center gap-6">

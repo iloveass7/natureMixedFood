@@ -68,7 +68,7 @@ const AddProduct = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-      <div className="bg-white px-8 pb-8 rounded shadow-lg w-full max-w-8xl">
+      <div className="bg-white px-9 pb-8 rounded shadow-lg w-full max-w-8xl">
 
         <h3 className="text-center text-4xl font-extrabold mb-8 text-green-800">
           Add New Product
@@ -163,20 +163,6 @@ const AddProduct = () => {
               className="border border-gray-300 rounded p-4 text-lg w-full"
               placeholder="Enter product description"
             ></textarea>
-          </div>
-
-          {/* Quantity */}
-          <div>
-            <label className="block font-bold mb-4 text-2xl">Available Quantity</label>
-            <input
-              type="number"
-              value={quantity}
-              min="0"
-              onChange={(e) => setQuantity(e.target.value)}
-              required
-              className="border border-gray-300 rounded p-4 text-lg w-full"
-              placeholder="Enter stock quantity"
-            />
           </div>
 
           {/* Price */}

@@ -1,16 +1,87 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 const EditImages = () => {
   const [bannerImage, setBannerImage] = useState(null);
   const [sliderImages, setSliderImages] = useState([]);
-  const [currentBanner, setCurrentBanner] = useState(
-    "https://images.unsplash.com/photo-1750875936215-0c35c1742cd6?q=80&w=688&auto=format&fit=crop"
-  );
-  const [currentSliders, setCurrentSliders] = useState([
-    "https://images.unsplash.com/photo-1750439889444-dad033c8e825?q=80&w=687&auto=format&fit=crop",
-    "https://plus.unsplash.com/premium_photo-1750353386208-7e189f9845ef?q=80&w=687&auto=format&fit=crop",
-  ]);
+  const [currentBanner, setCurrentBanner] = useState(null);
+  const [currentSliders, setCurrentSliders] = useState([]);
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    try {
+      const bannerRes = await axios.get("http://localhost:8000/api/card/getBanner");
+      const cardsRes = await axios.get("http://localhost:8000/api/card/getCards");
+
+      setCurrentBanner(bannerRes.data?.image || null);
+      // make sliders editable by copying values to state
+      setCurrentSliders(
+        cardsRes.data.map((card) => ({
+          ...card,
+          isUpdating: false,
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to fetch images", error);
+    }
+  };
+
+  const handleBannerChange = (e) => {
+    if (e.target.files[0]) {
+      setBannerImage(e.target.files[0]);
+    }
+  };
+
+  const handleSliderChange = (e) => {
+    const files = Array.from(e.target.files);
+    const newSliderObjects = files.map((file) => ({
+      file,
+      title: "",
+      description: "",
+    }));
+    setSliderImages((prev) => [...prev, ...newSliderObjects]);
+  };
+
+  const handleSliderInputChange = (index, field, value) => {
+    const updated = [...sliderImages];
+    updated[index][field] = value;
+    setSliderImages(updated);
+  };
+
+  const removeSliderImage = (index) => {
+    const updated = [...sliderImages];
+    updated.splice(index, 1);
+    setSliderImages(updated);
+  };
+
+  const handleCurrentSliderEdit = (index, field, value) => {
+    const updated = [...currentSliders];
+    updated[index][field] = value;
+    setCurrentSliders(updated);
+  };
+
+  const updateSliderCard = async (id, title, description, index) => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      await axios.put(
+        `http://localhost:8000/api/card/update/${id}`,
+        { title, description },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      alert("Slider updated");
+      fetchImages();
+    } catch (err) {
+      console.error("Slider update error:", err);
+      alert("Update failed");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,15 +102,12 @@ const EditImages = () => {
       }
 
       for (let i = 0; i < sliderImages.length; i++) {
-        const cardForm = new FormData();
-        cardForm.append("image", sliderImages[i]);
-        cardForm.append("title", `Slider Image ${i + 1}`);
-        cardForm.append(
-          "description",
-          `Auto generated slider description ${i + 1}`
-        );
+        const form = new FormData();
+        form.append("image", sliderImages[i].file);
+        form.append("title", sliderImages[i].title);
+        form.append("description", sliderImages[i].description);
 
-        await axios.post("http://localhost:8000/api/card/add", cardForm, {
+        await axios.post("http://localhost:8000/api/card/add", form, {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
@@ -50,54 +118,26 @@ const EditImages = () => {
       alert("Images uploaded successfully!");
       setBannerImage(null);
       setSliderImages([]);
+      fetchImages();
     } catch (error) {
-      console.error(
-        "Image upload error:",
-        error.response?.data || error.message
-      );
-      alert("Image upload failed. Check console for details.");
+      console.error("Image upload error:", error.response?.data || error.message);
+      alert("Upload failed. Check console for details.");
     }
-  };
-
-  const handleBannerChange = (e) => {
-    if (e.target.files[0]) {
-      setBannerImage(e.target.files[0]);
-    }
-  };
-
-  const handleSliderChange = (e) => {
-    if (e.target.files) {
-      setSliderImages([...sliderImages, ...Array.from(e.target.files)]);
-    }
-  };
-
-  const removeSliderImage = (index) => {
-    const newImages = [...sliderImages];
-    newImages.splice(index, 1);
-    setSliderImages(newImages);
-  };
-
-  const removeCurrentSlider = (index) => {
-    const newSliders = [...currentSliders];
-    newSliders.splice(index, 1);
-    setCurrentSliders(newSliders);
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-      <div className="bg-white px-8 pb-8 rounded shadow-lg w-full max-w-8xl">
+      <div className="bg-white px-9 pb-8 rounded shadow-lg w-full max-w-8xl">
         <h3 className="text-center text-4xl font-extrabold mb-8 text-green-800">
           Edit Images
         </h3>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-12">
+
           {/* Banner Section */}
           <div>
-            <label className="block font-bold mb-4 text-2xl">
-              Banner Section Image
-            </label>
-            <p className="mb-4 text-lg">Upload banner section image here.</p>
-
+            <label className="block font-bold mb-4 text-2xl">Banner Image</label>
+            <p className="mb-4 text-lg">Upload a new banner image.</p>
             <div className="flex items-center gap-6 mb-4">
               <input
                 type="file"
@@ -115,37 +155,87 @@ const EditImages = () => {
             </div>
 
             <div className="flex flex-wrap gap-6 mb-8">
-              <div className="rounded py-2">
-                <h5 className="font-semibold text-xl mb-2">Current Banner</h5>
-                <img
-                  src={currentBanner}
-                  alt="Current Banner"
-                  className="w-150 h-100 object-cover rounded"
-                />
-              </div>
-
+              {currentBanner && (
+                <div>
+                  <h5 className="font-semibold text-xl mb-2">Current Banner</h5>
+                  <img
+                    src={currentBanner}
+                    alt="Current Banner"
+                    className="w-full max-w-md h-auto object-cover rounded"
+                  />
+                </div>
+              )}
               {bannerImage && (
-                <div className="rounded py-2">
+                <div>
                   <h5 className="font-semibold text-xl mb-2">New Banner</h5>
-                  <div className="relative">
-                    <img
-                      src={URL.createObjectURL(bannerImage)}
-                      alt="Banner Preview"
-                      className="w-150 h-100 object-cover rounded"
-                    />
-                  </div>
+                  <img
+                    src={URL.createObjectURL(bannerImage)}
+                    alt="New Banner Preview"
+                    className="w-full max-w-md h-auto object-cover rounded"
+                  />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Slider Section */}
+          {/* Current Slider Cards - Editable */}
           <div>
-            <label className="block font-bold mb-4 text-2xl">
-              Slider Section Images
-            </label>
-            <p className="mb-4 text-lg">Upload slider section images here.</p>
+            <label className="block font-bold mb-4 text-2xl">Current Offer Images</label>
+            <p className="mb-4 text-lg">Edit your current offer cards.</p>
 
+            <div className="space-y-8">
+              {currentSliders.map((card, idx) => (
+                <div
+                  key={card._id}
+                  className="flex flex-col px-8 py-5 sm:flex-row gap-6 shadow-2xl border border-gray-300 p-4 rounded shadow-md"
+                >
+                  <img
+                    src={card.image}
+                    alt={`Slider ${idx + 1}`}
+                    className="w-full sm:w-48 h-51 object-cover rounded my-2"
+                  />
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <label className="block font-semibold text-lg">Title</label>
+                      <input
+                        type="text"
+                        value={card.title}
+                        onChange={(e) =>
+                          handleCurrentSliderEdit(idx, "title", e.target.value)
+                        }
+                        className="w-full border border-gray-400 px-3 py-2 my-2 text-lg rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-lg">Description</label>
+                      <textarea
+                        rows="2"
+                        value={card.description}
+                        onChange={(e) =>
+                          handleCurrentSliderEdit(idx, "description", e.target.value)
+                        }
+                        className="w-full border border-gray-400 px-3 py-2 mt-2 text-lg rounded"
+                      ></textarea>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateSliderCard(card._id, card.title, card.description, idx)
+                      }
+                      className="bg-green-700 text-white px-6 py-2 mb-2 rounded hover:bg-amber-500 transition font-semibold"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Upload New Sliders */}
+          <div>
+            <label className="block font-bold mb-4 text-2xl">Add New Offers</label>
+            <p className="mb-4 text-lg">Upload new Offer Images and set their info.</p>
             <div className="flex items-center gap-6 mb-4">
               <input
                 type="file"
@@ -159,77 +249,70 @@ const EditImages = () => {
                 htmlFor="sliderUpload"
                 className="bg-green-700 hover:bg-amber-500 text-white px-6 py-2 rounded cursor-pointer font-semibold"
               >
-                Add Slider Images
+                Upload Slider Images
               </label>
               <span className="text-gray-600">
                 {sliderImages.length > 0
-                  ? `${sliderImages.length} new file(s) selected`
-                  : "No new files chosen"}
+                  ? `${sliderImages.length} new image(s) selected`
+                  : "No new images"}
               </span>
             </div>
 
-            <div className="rounded py-2 mb-6">
-              <h5 className="font-semibold text-xl mb-4">
-                Current Slider Images
-              </h5>
-              <div className="flex gap-4 flex-wrap">
-                {currentSliders.map((img, idx) => (
+            {sliderImages.length > 0 && (
+              <div className="space-y-8">
+                {sliderImages.map((slider, idx) => (
                   <div
-                    key={`current-${idx}`}
-                    className="relative group rounded"
+                    key={idx}
+                    className="flex flex-col px-8 py-5 sm:flex-row gap-6 shadow-2xl border border-gray-300 p-4 rounded shadow-md"
                   >
                     <img
-                      src={img}
-                      alt={`Slider ${idx + 1}`}
-                      className="w-52 h-52 object-cover rounded"
+                      src={URL.createObjectURL(slider.file)}
+                      alt="New Preview"
+                      className="w-full sm:w-48 h-50 my-2 object-cover rounded"
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeCurrentSlider(idx)}
-                      className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                      title="Remove"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {sliderImages.length > 0 && (
-              <div className="rounded py-2 mb-8">
-                <h5 className="font-semibold text-xl mb-4">
-                  New Slider Images Preview
-                </h5>
-                <div className="flex gap-4 flex-wrap">
-                  {sliderImages.map((img, idx) => (
-                    <div key={`new-${idx}`} className="relative group rounded">
-                      <img
-                        src={URL.createObjectURL(img)}
-                        alt="Slider Preview"
-                        className="w-52 h-52 object-cover rounded"
-                      />
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <label className="block font-semibold text-lg">Title</label>
+                        <input
+                          type="text"
+                          value={slider.title}
+                          onChange={(e) =>
+                            handleSliderInputChange(idx, "title", e.target.value)
+                          }
+                          className="w-full border border-gray-400 px-3 py-2 mt-2 text-lg rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-semibold text-lg">Description</label>
+                        <textarea
+                          rows="2"
+                          value={slider.description}
+                          onChange={(e) =>
+                            handleSliderInputChange(idx, "description", e.target.value)
+                          }
+                          className="w-full border border-gray-400 px-3 py-2 mt-2 text-lg rounded"
+                        ></textarea>
+                      </div>
                       <button
                         type="button"
                         onClick={() => removeSliderImage(idx)}
-                        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                        title="Remove"
+                        className="bg-red-600 text-white px-6 py-2 mb-2 rounded hover:bg-amber-500 transition font-semibold"
                       >
-                        ✕
+                        Remove
                       </button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          <div className="pt-4">
+          <div className="pt-1">
             <button
               type="submit"
               className="bg-green-700 hover:bg-amber-500 text-white px-6 py-3 rounded text-lg font-semibold w-full"
             >
-              Save Changes
+              Save All New Uploads
             </button>
           </div>
         </form>

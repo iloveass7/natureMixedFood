@@ -17,7 +17,7 @@ const AdminDashboard = () => {
         
         {/* Top Section */}
         <div className="space-y-5">
-          <h2 className="lg:my-8 text-center lg:text-[2.4rem] md:text-4xl font-extrabold mb-6 text-green-800">Hello Admin</h2>
+          <h2 className="lg:my-8 text-center text-4xl lg:text-[2.4rem] md:text-4xl font-extrabold mb-6 text-green-800 sm:text-4xl">Hello Admin</h2>
 
           <button
             className={`border border-green-800 w-full text-left px-4 py-3 font-semibold rounded text-lg hover:bg-green-200 hover:text-black ${
