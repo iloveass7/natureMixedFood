@@ -51,3 +51,28 @@ export const getCards = async (req, res) => {
     res.status(500).json({ message: "Error fetching cards" });
   }
 };
+export const updateCard = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const { id } = req.params;
+
+    if (!title || !description) {
+      return res.status(400).json({ message: "Title and Description are required" });
+    }
+
+    const updatedCard = await cardModel.findByIdAndUpdate(
+      id,
+      { title, description },
+      { new: true }
+    );
+
+    if (!updatedCard) {
+      return res.status(404).json({ message: "Card not found" });
+    }
+
+    res.status(200).json({ message: "Card updated", card: updatedCard });
+  } catch (err) {
+    res.status(500).json({ message: "Update failed", error: err.message });
+  }
+};
+
