@@ -28,7 +28,6 @@ const Navbar = () => {
     console.log('Searching for:', searchQuery);
   };
 
-  // Dispatch custom event to control sidebar/chat visibility
   const dispatchSidebarToggle = (open) => {
     window.dispatchEvent(new CustomEvent("toggleSidebars", { detail: open }));
   };
@@ -43,7 +42,7 @@ const Navbar = () => {
             </Link>
           </div>
 
-          <ul className="hidden md:flex flex-1 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] lg:text-[1.5rem]">
+          <ul className="hidden md:flex flex-10 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] lg:text-[1.5rem]">
             <li><Link to="/" className="hover:text-yellow-500">Home</Link></li>
             <li><Link to="/blogs" className="hover:text-yellow-500">Blogs</Link></li>
             <li><Link to="/about" className="hover:text-yellow-500">About</Link></li>
