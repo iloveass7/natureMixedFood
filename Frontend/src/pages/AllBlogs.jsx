@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import Loader from "../components/Loader";
 
 const AllBlogs = () => {
   const [blogs, setBlogs] = useState([]);
@@ -39,9 +40,7 @@ const AllBlogs = () => {
 
   if (loading) {
     return (
-      <div className="w-full py-20 text-center text-xl font-semibold text-gray-500">
-        Loading blogs...
-      </div>
+      <Loader />
     );
   }
 

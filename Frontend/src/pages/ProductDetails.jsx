@@ -37,7 +37,7 @@ const ProductDetails = () => {
   if (!product) return <div className="text-center py-10">Product not found</div>;
 
   return (
-    <div className="w-full px-4 md:px-36 py-10 pb-16">
+    <div className="min-h-auto w-full px-4 md:px-36 py-10 pb-16">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* LEFT SECTION */}
         <div className="w-full lg:w-1/2 px-4 h-[700px] flex flex-col justify-between">
@@ -97,7 +97,7 @@ const ProductDetails = () => {
             <ShoppingCart size={20} /> Add to Cart
           </button>
 
-          {/* Feature Cards Included in Scroll */}
+          {/* Feature Cards */}
           <div className="flex flex-col space-y-3 mt-6">
             <div className="flex items-center gap-4 bg-gray-50 shadow-md rounded p-4 hover:bg-green-200">
               <div className="w-12 h-12 bg-white border rounded-full flex items-center justify-center">

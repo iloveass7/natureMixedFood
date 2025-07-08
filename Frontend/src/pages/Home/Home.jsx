@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import HeroSection from "./HeroSection";
 import ProductsSection from "./ProductsSection";
@@ -9,6 +9,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [showChatIcons, setShowChatIcons] = useState(true);
   const navigate = useNavigate();
+
+  const productsRef = useRef(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -36,8 +38,12 @@ const Home = () => {
 
   return (
     <div className="w-full">
-      <HeroSection />
-      <ProductsSection products={products} loading={loading} />
+      <HeroSection scrollToProducts={() => productsRef.current?.scrollIntoView({ behavior: "smooth" })} />
+
+      <div ref={productsRef}>
+        <ProductsSection products={products} loading={loading} />
+      </div>
+
       <InfoCardsSection />
 
       {/* Chat Buttons */}

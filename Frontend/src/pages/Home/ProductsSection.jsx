@@ -1,25 +1,25 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../components/Loader";
 
 const ProductsSection = ({ products, loading }) => {
   const [showAll, setShowAll] = useState(false);
   const navigate = useNavigate();
 
-  // Determine the number of products per row based on screen size
   const getProductsPerRow = () => {
-    if (typeof window === "undefined") return 4; // Default for SSR
-    if (window.innerWidth >= 1024) return 4; // lg:grid-cols-4
-    if (window.innerWidth >= 640) return 2; // sm:grid-cols-2
-    return 1; // grid-cols-1
+    if (typeof window === "undefined") return 4;
+    if (window.innerWidth >= 1024) return 4;
+    if (window.innerWidth >= 640) return 2; 
+    return 1; 
   };
 
   const productsPerRow = getProductsPerRow();
-  const maxVisibleWithoutButton = productsPerRow * 2; // Two rows worth of products
+  const maxVisibleWithoutButton = productsPerRow * 2; 
   const shouldShowButton = products.length > maxVisibleWithoutButton;
   const visibleProducts = showAll ? products : products.slice(0, maxVisibleWithoutButton);
 
   if (loading) {
-    return <div className="w-full text-center py-10">Loading products...</div>;
+    return <Loader />;
   }
 
   const renderCard = (product) => (
