@@ -55,98 +55,80 @@ const AddBlog = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-      <div className="bg-white px-8 pb-8 rounded shadow-lg w-full max-w-8xl">
-        <h3 className="text-center text-4xl font-extrabold mb-8 text-green-800">
+      <div className="bg-white px-8 pb-8 gap-7 rounded shadow-lg w-full max-w-8xl h-full">
+        <h3 className="text-center text-4xl font-extrabold mb-12  text-green-800">
           Add New Blog Post
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Blog Title */}
           <div>
-            <label className="block font-bold mb-2 text-xl">Blog Title*</label>
+            <label className="block font-bold mb-4 text-2xl">Blog Title*</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="border border-gray-300 rounded p-3 text-lg w-full"
+              className="border border-gray-300 rounded p-3 mb-6 text-lg w-full"
               placeholder="Enter blog title"
             />
           </div>
 
-          {/* Author and Date */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block font-bold mb-2 text-xl">Author*</label>
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                required
-                className="border border-gray-300 rounded p-3 text-lg w-full"
-                placeholder="Author name"
-              />
-            </div>
-            <div>
-              <label className="block font-bold mb-2 text-xl">
-                Publish Date*
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                className="border border-gray-300 rounded p-3 text-lg w-full"
-              />
-            </div>
-          </div>
-
-          {/* Featured Image */}
-          <div>
-            <label className="block font-bold mb-2 text-xl">
-              Featured Image
-            </label>
-            <div className="flex items-center gap-6 mb-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                id="featuredImageUpload"
-                className="hidden"
-              />
-              <label
-                htmlFor="featuredImageUpload"
-                className="bg-green-700 hover:bg-amber-500 text-white px-6 py-2 rounded cursor-pointer font-semibold"
-              >
-                Choose Image
-              </label>
-              <span className="text-gray-600">
-                {featuredImage ? "1 file selected" : "No file chosen"}
-              </span>
-            </div>
-            {featuredImage && (
-              <div className="mt-2">
-                <img
-                  src={URL.createObjectURL(featuredImage)}
-                  alt="Featured preview"
-                  className="w-full max-w-xs h-auto object-cover rounded shadow"
-                />
-              </div>
-            )}
-          </div>
-
           {/* Blog Content */}
           <div>
-            <label className="block font-bold mb-2 text-xl">Content*</label>
+            <label className="block font-bold mb-4 text-2xl">Description*</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required
-              rows="10"
-              className="border border-gray-300 rounded p-3 text-lg w-full"
+              rows="13"
+              className="border border-gray-300 rounded p-3 mb-4 text-lg w-full"
               placeholder="Write your blog content here..."
             ></textarea>
           </div>
+
+{/* Featured Image */}
+<div>
+  <label className="block font-bold mb-2 text-2xl">Featured Image*</label>
+  <div className="flex items-center gap-6 mb-2">
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageChange}
+      id="featuredImageUpload"
+      className="hidden"
+    />
+    <label
+      htmlFor="featuredImageUpload"
+      className="bg-green-700 hover:bg-amber-500 text-white mt-3 px-8 py-2 rounded cursor-pointer font-semibold"
+    >
+      Choose Image
+    </label>
+    <span className="text-gray-600 mt-3">
+      {featuredImage ? "1 file selected" : "No file chosen"}
+    </span>
+  </div>
+
+  {/* Preview with remove button */}
+  {featuredImage && (
+    <div className="mt-4 relative group w-fit">
+      <img
+        src={URL.createObjectURL(featuredImage)}
+        alt="Featured preview"
+        className="w-64 h-64 object-cover rounded shadow"
+      />
+      <button
+        type="button"
+        onClick={() => setFeaturedImage(null)}
+        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hidden group-hover:flex"
+        title="Remove"
+      >
+        ✕
+      </button>
+    </div>
+  )}
+</div>
+
 
           {/* Submit Button */}
           <div className="pt-4">

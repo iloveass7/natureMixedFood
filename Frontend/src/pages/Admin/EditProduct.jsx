@@ -109,7 +109,7 @@ const EditProduct = () => {
           key={product._id}
           className="border border-gray-300 rounded-lg px-6 my-7 py-8 shadow-xl hover:shadow-2xl transition"
         >
-<div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <img
               src={product.images[0]}
               alt="Product"
@@ -118,15 +118,15 @@ const EditProduct = () => {
             <div className="flex flex-col justify-between w-full">
               <div>
                 <h3
-  className="text-2xl sm:text-3xl font-bold mb-2 text-green-800 break-words"
-  style={{
-    wordBreak: "break-word",
-    overflowWrap: "break-word",
-    hyphens: "auto",
-  }}
->
-  {product.name}
-</h3>
+                  className="text-2xl sm:text-3xl font-bold mb-2 text-green-800 break-words"
+                  style={{
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    hyphens: "auto",
+                  }}
+                >
+                  {product.name}
+                </h3>
 
                 <p
                   className="text-gray-700 mb-2 text-xl overflow-hidden break-words"

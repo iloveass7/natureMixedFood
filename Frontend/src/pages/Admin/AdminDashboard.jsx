@@ -5,13 +5,13 @@ import AddProduct from "./AddProduct";
 import EditImages from "./EditImages";
 import OrderList from "./OrderList";
 import EditProduct from "./EditProduct";
+import EditBlog from "./EditBlog";
 import Loader from "../../components/Loader";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("orders");
   const [loading, setLoading] = useState(false);
 
-  // Handle loading when switching tabs
   const handleTabChange = (tab) => {
     setLoading(true);
     setActiveTab(tab);
@@ -19,7 +19,7 @@ const AdminDashboard = () => {
 
   // Simulate loading delay
   useEffect(() => {
-    const timeout = setTimeout(() => setLoading(false), 600); // Adjust duration as needed
+    const timeout = setTimeout(() => setLoading(false), 600);
     return () => clearTimeout(timeout);
   }, [activeTab]);
 
@@ -38,6 +38,7 @@ const AdminDashboard = () => {
             { tab: "modify", label: "Edit Products" },
             { tab: "images", label: "Edit Images" },
             { tab: "blogs", label: "Add Blogs" },
+            { tab: "modblogs", label: "Edit Blogs" },
           ].map(({ tab, label }) => (
             <button
               key={tab}
@@ -72,6 +73,7 @@ const AdminDashboard = () => {
             {activeTab === "modify" && <EditProduct />}
             {activeTab === "images" && <EditImages />}
             {activeTab === "blogs" && <AddBlog />}
+            {activeTab === "modblogs" && <EditBlog />}
           </>
         )}
       </div>

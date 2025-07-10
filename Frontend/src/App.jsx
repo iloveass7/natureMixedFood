@@ -24,6 +24,8 @@ import AdminLogin from "./pages/AdminLogin";
 import EditProduct from "./pages/Admin/EditProduct";
 import AdminPrivateRoute from "./components/AdminPrivateRoute";
 import AllBlogs from "./pages/AllBlogs";
+import EditBlog from "./pages/Admin/EditBlog";
+import BlogDetails from "./pages/BlogDetails";
 import Loader from "./components/Loader"; 
 
 const App = () => {
@@ -48,6 +50,7 @@ const App = () => {
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/blogs" element={<AllBlogs />} />
         <Route path="/loader" element={<Loader />} />
+        <Route path="/blog/:id" element={<BlogDetails />} />
 
         {/* Protected Admin Routes */}
         <Route
@@ -63,6 +66,14 @@ const App = () => {
           element={
             <AdminPrivateRoute>
               <AddBlog />
+            </AdminPrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/edit-blog"
+          element={
+            <AdminPrivateRoute>
+              <EditBlog />
             </AdminPrivateRoute>
           }
         />
