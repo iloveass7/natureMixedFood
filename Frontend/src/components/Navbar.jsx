@@ -11,7 +11,7 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const isUserLoggedIn = localStorage.getItem('authToken') || localStorage.getItem('userData');
+  const isUserLoggedIn = localStorage.getItem('token') || localStorage.getItem('userData');
   const isAdminLoggedIn = localStorage.getItem('adminToken');
   const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
 
@@ -69,7 +69,8 @@ const Navbar = () => {
               <Search size={31} />
             </button>
 
-            {isUserLoggedIn && (
+            {/* Only show cart if user is logged in (not admin) */}
+            {isUserLoggedIn && !isAdminLoggedIn && (
               <button
                 onClick={() => {
                   setCartOpen(true);
@@ -83,6 +84,7 @@ const Navbar = () => {
               </button>
             )}
 
+            {/* Only show logout if either user or admin is logged in */}
             {(isUserLoggedIn || isAdminLoggedIn) && (
               <button onClick={handleLogout} className="hover:text-red-500" title="Logout">
                 <LogOut size={31} />

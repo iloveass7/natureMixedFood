@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Oval } from "react-loader-spinner";
 
 const Register = () => {
-  const [form, setForm] = useState({ 
-    name: "", 
-    email: "", 
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
     password: "",
     confirmPassword: ""
   });
@@ -52,22 +53,41 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 bg-white">
-      <div className="max-w-2xl py-32 w-full space-y-10 bg-white p-8 rounded-lg border border-green-800 shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen md:min-h-250 flex flex-col md:flex-row">
+      {/* Left side with full logo and tagline - hidden on mobile */}
+      <div className="hidden md:flex w-full md:w-2/3 bg-gradient-to-br from-green-800 to-white flex-col items-center justify-center p-4">
+        <img
+          src="/logo.png"
+          alt="Logo"
+          className="w-60 md:w-90 h-auto md:h-90 object-contain mb-6 md:mb-10"
+        />
+        <p
+          className="text-white text-2xl md:text-[2.9rem] font-bold tracking-wide drop-shadow-lg text-center px-4"
+          style={{
+            WebkitTextStroke: "1px black",
+            WebkitTextFillColor: "white",
+          }}
+        >
+          Nature Mixed Food
+        </p>
+      </div>
+
+      {/* Right side - register form */}
+      <div className="w-full md:w-1/2 min-h-screen flex items-center justify-center p-4 md:p-8">
+        <div className="w-full max-w-md md:max-w-2xl h-190 flex flex-col justify-center space-y-10 md:space-y-12 p-6 md:p-14 border border-green-400 shadow-lg md:shadow-2xl rounded-lg">
+          <h2 className="text-center text-2xl md:text-3xl font-extrabold text-green-700">
             Create your account
           </h2>
-        </div>
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
-        <form className="mt-8 space-y-6" onSubmit={registerHandler}>
-          <div className="rounded-md shadow-sm space-y-4">
+
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-sm md:text-base">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4 md:space-y-6" onSubmit={registerHandler}>
             <div>
-              <label htmlFor="name" className="block text-lg font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
                 Full Name
               </label>
               <input
@@ -75,14 +95,15 @@ const Register = () => {
                 id="name"
                 name="name"
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
                 placeholder="John Doe"
                 value={form.name}
                 onChange={handleChange}
               />
             </div>
+
             <div>
-              <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
                 Email address
               </label>
               <input
@@ -90,14 +111,15 @@ const Register = () => {
                 id="email"
                 name="email"
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
                 placeholder="johndoe@example.com"
                 value={form.email}
                 onChange={handleChange}
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="block text-lg font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
@@ -106,14 +128,15 @@ const Register = () => {
                 name="password"
                 required
                 minLength="8"
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
                 placeholder="Minimum 8 characters"
                 value={form.password}
                 onChange={handleChange}
               />
             </div>
+
             <div>
-              <label htmlFor="confirmPassword" className="block text-lg font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
                 Confirm Password
               </label>
               <input
@@ -121,38 +144,52 @@ const Register = () => {
                 id="confirmPassword"
                 name="confirmPassword"
                 required
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
                 placeholder="Confirm your password"
                 value={form.confirmPassword}
                 onChange={handleChange}
               />
             </div>
-          </div>
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-lg font-medium rounded-md text-white bg-green-700 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${loading ? "bg-green-500 opacity-60 cursor-not-allowed" : "bg-green-700 hover:bg-amber-500"
+                }`}
+              style={{ minHeight: "44px" }}
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? (
+                <Oval
+                  height={24}
+                  width={24}
+                  color="#ffffff"
+                  visible={true}
+                  ariaLabel="oval-loading"
+                  secondaryColor="#ffffff"
+                  strokeWidth={6}
+                  strokeWidthSecondary={6}
+                />
+              ) : (
+                "Register"
+              )}
             </button>
-          </div>
-        </form>
+          </form>
 
-        <div className="text-center text-lg text-gray-600">
-          <p>
-            Already have an account?{" "}
-            <button
-              onClick={() => navigate('/login')}
-              className="font-medium text-green-700 hover:text-amber-400 cursor-pointer"
-            >
-              Login
-            </button>
-          </p>
+          <div className="text-center text-gray-600 text-base md:text-lg">
+            <p>
+              Already have an account?{" "}
+              <button
+                onClick={() => navigate('/login')}
+                className="font-medium text-green-700 hover:text-amber-600"
+              >
+                Login
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
+
 export default Register;

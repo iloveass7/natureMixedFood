@@ -40,15 +40,9 @@ const HeroSection = ({ scrollToProducts }) => {
   }
 
   return (
-    <section className="flex flex-col md:flex-row gap-4 px-2 md:px-4 pt-3 pb-14 sm:pb-0 sm:mb-12 lg:mb-8 md:mb-8 lg:min-h-[680px] md:min-h-[680px] sm:min-h-[1000px] md:h-[380px] h-[640px] mb-24">
-      {/* Banner Image */}
-      <div
-        className="md:w-3/5 w-full h-[630px] bg-cover bg-center rounded-lg hidden md:block"
-        style={{ backgroundImage: `url(${banner})` }}
-      ></div>
-
-      {/* Slider */}
-      <div className="md:w-2/5 w-full h-[630px]">
+    <section className="w-full">
+      {/* Mobile/Tablet View (sm and md) - Only Slider */}
+      <div className="lg:hidden w-full h-[720px] px-4 sm:px-6 mb-6"> {/* Added horizontal padding */}
         <Swiper
           modules={[Autoplay, Pagination]}
           autoplay={{ delay: 2000, disableOnInteraction: false }}
@@ -57,28 +51,26 @@ const HeroSection = ({ scrollToProducts }) => {
           className="h-full"
         >
           {cards.map((item, index) => (
-            <SwiperSlide key={index} className="flex flex-col h-full">
-              <div className="w-full h-[60%]">
+            <SwiperSlide key={index} className="flex flex-col h-full top-3">
+              <div className="w-full h-[70%]"> {/* Increased image height */}
                 <img
                   src={item.image}
                   alt={`Card ${index + 1}`}
-                  className="w-full h-105 object-cover rounded-t-lg"
+                  className="w-full h-full object-cover rounded-t-lg"
                 />
               </div>
-
-              <div className="w-full h-[40%] bg-white px-2 flex flex-col justify-center rounded-b-lg">
-                <div className="flex items-center">
+              <div className="w-full h-[25%] bg-white px-4 flex flex-col justify-center rounded-b-lg"> {/* Reduced content height */}
+                <div className="flex items-center gap-2">
                   {item.icon && item.icon}
-                  <h3 className="text-3xl font-bold text-black mt-8">
+                  <h3 className="text-3xl font-bold text-black mt-3"> {/* Reduced text size */}
                     {item.title}
                   </h3>
                 </div>
-                <p className="text-gray-600 text-lg md:text-base mt-2 mb-5 break-words line-clamp-3">
+                <p className="text-gray-600 text-lg  mt-2 mb-4  break-words line-clamp-2"> {/* Reduced text size and margins */}
                   {item.description}
                 </p>
-
                 <button
-                  className="bg-green-700 text-white px-4 py-2 rounded text-sm md:text-base hover:bg-yellow-500 transition self-start"
+                  className="bg-green-700 text-white px-6 py-2 rounded text-lg hover:bg-yellow-500 transition self-start mt-1" /* Reduced button size */
                   onClick={scrollToProducts}
                 >
                   Shop Now
@@ -87,6 +79,55 @@ const HeroSection = ({ scrollToProducts }) => {
             </SwiperSlide>
           ))}
         </Swiper>
+      </div>
+
+      {/* Desktop View (lg+) - Original Layout */}
+      <div className="hidden lg:flex flex-row gap-4 px-4 pt-3 pb-16 min-h-[680px]">
+        {/* Banner Image */}
+        <div
+          className="w-3/5 h-[680px] bg-cover bg-center rounded-lg"
+          style={{ backgroundImage: `url(${banner})` }}
+        ></div>
+
+        {/* Slider */}
+        <div className="w-2/5 h-[680px]">
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            autoplay={{ delay: 2000, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            loop={cards.length > 1}
+            className="h-full"
+          >
+            {cards.map((item, index) => (
+              <SwiperSlide key={index} className="flex flex-col h-full">
+                <div className="w-full lg:h-[70%]">
+                  <img
+                    src={item.image}
+                    alt={`Card ${index + 1}`}
+                    className="w-full h-full object-cover rounded-t-lg"
+                  />
+                </div>
+                <div className="w-full lg:h-[30%] bg-white px-4 flex flex-col justify-center rounded-b-lg">
+                  <div className="flex items-center">
+                    {item.icon && item.icon}
+                    <h3 className="text-3xl font-bold text-black">
+                      {item.title}
+                    </h3>
+                  </div>
+                  <p className="text-gray-600 text-base mt-2 mb-4 break-words line-clamp-3">
+                    {item.description}
+                  </p>
+                  <button
+                    className="bg-green-700 text-white px-6 py-2 text-lg rounded hover:bg-yellow-500 transition self-start"
+                    onClick={scrollToProducts}
+                  >
+                    Shop Now
+                  </button>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       </div>
     </section>
   );
