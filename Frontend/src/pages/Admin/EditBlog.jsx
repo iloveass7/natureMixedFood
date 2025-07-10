@@ -1,0 +1,254 @@
+import { useEffect, useState } from "react";
+
+const EditBlog = () => {
+  const [blogs, setBlogs] = useState([]);
+  const [editingBlog, setEditingBlog] = useState(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    image: null,
+    existingImage: "",
+  });
+  const [showAllBlogs, setShowAllBlogs] = useState(false);
+
+  const fetchBlogs = async () => {
+    const res = await fetch("http://localhost:8000/api/blog/getBlogs");
+    const data = await res.json();
+    
+    // Sort blogs by createdAt in descending order (newest first)
+    const sortedBlogs = data.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB - dateA;
+    });
+    
+    setBlogs(sortedBlogs);
+  };
+
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
+
+  const handleEditClick = (blog) => {
+    if (editingBlog === blog._id) {
+      setEditingBlog(null);
+    } else {
+      setEditingBlog(blog._id);
+      setFormData({
+        title: blog.title,
+        description: blog.description,
+        image: null,
+        existingImage: blog.image,
+      });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this blog?")) return;
+    const res = await fetch(`http://localhost:8000/api/blog/deleteBlog/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+      },
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("Blog deleted successfully!");
+      fetchBlogs();
+    } else {
+      alert(data.message || "Error deleting blog");
+    }
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    const updateData = new FormData();
+    updateData.append("title", formData.title);
+    updateData.append("description", formData.description);
+    if (formData.image) {
+      updateData.append("image", formData.image);
+    }
+
+    const res = await fetch(
+      `http://localhost:8000/api/blog/updateBlog/${editingBlog}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        body: updateData,
+      }
+    );
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("Blog updated successfully");
+      setEditingBlog(null);
+      fetchBlogs();
+    } else {
+      alert(data.message || "Update failed");
+    }
+  };
+
+  const handleImageChange = (e) => {
+    if (e.target.files[0]) {
+      setFormData({ ...formData, image: e.target.files[0] });
+    }
+  };
+
+  const visibleBlogs = showAllBlogs ? blogs : blogs.slice(0, 5);
+
+  return (
+    <div className="px-6 py-1">
+      <h2 className="text-4xl font-extrabold mb-9 text-green-800">Edit Blogs</h2>
+
+      {visibleBlogs.map((blog) => (
+        <div
+          key={blog._id}
+          className="border border-gray-300 rounded-lg px-6 my-7 py-8 shadow-xl hover:shadow-2xl transition"
+        >
+          <div className="flex flex-col sm:flex-row gap-4">
+            <img
+              src={blog.image}
+              alt="Blog"
+              className="w-48 h-48 mx-3 object-cover rounded"
+            />
+            <div className="flex flex-col justify-between w-full">
+              <div>
+                <h3
+                  className="text-2xl sm:text-3xl font-bold mb-2 text-green-800 break-words"
+                  style={{
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    hyphens: "auto",
+                  }}
+                >
+                  {blog.title}
+                </h3>
+
+                <p
+                  className="text-gray-700 mb-2 text-xl overflow-hidden break-words"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {blog.description}
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  className="bg-green-700 text-white px-8 py-1 font-semibold text-lg rounded hover:bg-amber-500 transition hover:font-semibold"
+                  onClick={() => handleEditClick(blog)}
+                >
+                  {editingBlog === blog._id ? "Close" : "Edit"}
+                </button>
+                <button
+                  className="bg-red-500 text-white px-6 py-1 text-lg font-semibold rounded hover:bg-red-800 transition hover:font-semibold"
+                  onClick={() => handleDelete(blog._id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {editingBlog === blog._id && (
+            <form
+              onSubmit={handleUpdateSubmit}
+              className="bg-gray-50 border-t-2 border-amber-400 mt-6 pt-6 px-2 animate-dropdown"
+            >
+              <input
+                type="text"
+                placeholder="Title"
+                value={formData.title}
+                className="border border-gray-400 w-full px-4 py-3 mb-2 text-lg"
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+              <textarea
+                placeholder="Description"
+                value={formData.description}
+                className="border border-gray-400 w-full px-4 py-3 mb-2 text-lg"
+                rows="5"
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                required
+              />
+
+              <div className="mb-6">
+                <label className="block font-bold mb-4 text-2xl">Blog Image</label>
+                <div className="flex items-center gap-6">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    id="editBlogFileUpload"
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="editBlogFileUpload"
+                    className="bg-green-700 hover:bg-amber-500 text-white px-6 py-2 rounded cursor-pointer font-semibold"
+                  >
+                    Choose File
+                  </label>
+                  <span className="text-gray-600">
+                    {formData.image ? "New image selected" : "Current image will be kept"}
+                  </span>
+                </div>
+
+                <div className="flex gap-4 mt-4">
+                  {formData.image ? (
+                    <div className="relative group">
+                      <img
+                        src={URL.createObjectURL(formData.image)}
+                        alt="preview"
+                        className="w-48 h-48 object-cover rounded shadow"
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative group">
+                      <img
+                        src={formData.existingImage}
+                        alt="current"
+                        className="w-48 h-48 object-cover rounded shadow"
+                      />
+                      <span className="text-sm text-gray-500">Current Image</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-green-700 hover:bg-amber-500 text-white px-6 py-2 rounded font-semibold"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      ))}
+
+      {blogs.length > 5 && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => setShowAllBlogs(!showAllBlogs)}
+            className="bg-green-700 text-white px-8 py-2 rounded font-semibold hover:bg-amber-500 transition"
+          >
+            {showAllBlogs ? "Show Less" : "Show More"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EditBlog;

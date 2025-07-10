@@ -15,6 +15,11 @@ blogRouter.post("/create", adminAuth, upload.single("image"), createBlog);
 blogRouter.get("/getBlogs", getBlogs);
 blogRouter.get("/getSingleBlog/:id", getSingleBlog);
 blogRouter.delete("/deleteBlog/:id", adminAuth, deleteBlog);
-blogRouter.put("/updateBlog/:id", adminAuth, updateBlog);
+blogRouter.put(
+  "/updateBlog/:id",
+  adminAuth,
+  upload.single("image"),
+  updateBlog
+);
 
 export default blogRouter;
