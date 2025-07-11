@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Oval } from "react-loader-spinner";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -115,26 +114,19 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${
-                loading ? "bg-green-500 opacity-60 cursor-not-allowed" : "bg-green-700 hover:bg-amber-500"
-              }`}
+              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${loading
+                  ? "bg-green-500 opacity-60 cursor-not-allowed"
+                  : "bg-green-700 hover:bg-amber-500"
+                }`}
               style={{ minHeight: "44px" }}
             >
               {loading ? (
-                <Oval
-                  height={24}
-                  width={24}
-                  color="#ffffff"
-                  visible={true}
-                  ariaLabel="oval-loading"
-                  secondaryColor="#ffffff"
-                  strokeWidth={6}
-                  strokeWidthSecondary={6}
-                />
+                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 "Sign in"
               )}
             </button>
+
           </form>
 
           <div className="text-center text-gray-600 text-base md:text-lg">

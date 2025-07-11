@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, Plus, Minus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getLocalCart } from "../utils/cart.jsx";
+import { getLocalCart, saveLocalCart, clearCart } from "../utils/cart.jsx";
 
 const Cart = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -11,6 +11,26 @@ const Cart = ({ isOpen, onClose }) => {
     const storedCart = getLocalCart();
     setCart(storedCart);
   }, []);
+
+  const handleQuantityChange = (productId, delta) => {
+    const updatedCart = cart
+      .map((item) => {
+        if (item._id === productId) {
+          const newQty = (item.quantity || 1) + delta;
+          return newQty > 0 ? { ...item, quantity: newQty } : null;
+        }
+        return item;
+      })
+      .filter(Boolean); // Remove items with quantity <= 0
+
+    setCart(updatedCart);
+    saveLocalCart(updatedCart);
+  };
+
+  const handleClearCart = () => {
+    clearCart();
+    setCart([]);
+  };
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * (item.quantity || 1),
@@ -26,19 +46,19 @@ const Cart = ({ isOpen, onClose }) => {
         onClick={onClose}
       ></div>
       <div className="absolute inset-y-0 right-0 max-w-full flex">
-        <div className="relative w-screen max-w-md">
+        <div className="relative w-screen max-w-xl">
           <div className="h-full flex flex-col bg-white shadow-xl">
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 px-9">
               <div className="flex items-start justify-between">
-                <h2 className="text-[1.7rem] text-green-700 px-3 font-bold">
+                <h2 className="text-[1.8rem] text-green-700 font-bold">
                   Shopping Cart
                 </h2>
                 <button
                   type="button"
-                  className="text-amber-400 hover:text-green-700"
+                  className="text-amber-400 hover:text-green-700 mt-2"
                   onClick={onClose}
                 >
-                  <X size={24} />
+                  <X size={30} />
                 </button>
               </div>
 
@@ -55,7 +75,7 @@ const Cart = ({ isOpen, onClose }) => {
                           <img
                             src={item.images?.[0] || "placeholder.jpg"}
                             alt={item.name}
-                            className="w-20 h-20 rounded border object-cover"
+                            className="w-25 h-25 rounded border object-cover"
                           />
                           <div className="flex-1 flex flex-col">
                             <div>
@@ -67,10 +87,31 @@ const Cart = ({ isOpen, onClose }) => {
                                   "No description"}
                               </p>
                             </div>
-                            <div className="flex-1 flex items-end justify-between text-sm">
-                              <p className="text-gray-500 text-sm">
-                                Qty: {item.quantity || 1}
-                              </p>
+                            <div className="flex-1 flex items-end justify-between">
+                              <div className="flex items-center mt-2 space-x-2">
+                                <button
+                                  onClick={() =>
+                                    handleQuantityChange(item._id, -1)
+                                  }
+                                  className="w-8 h-8 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+                                >
+                                  <Minus className="text-gray-700" size={18} />
+                                </button>
+
+                                <span className="text-base font-medium px-4">
+                                  {item.quantity || 1}
+                                </span>
+
+                                <button
+                                  onClick={() =>
+                                    handleQuantityChange(item._id, 1)
+                                  }
+                                  className="w-8 h-8 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+                                >
+                                  <Plus className="text-gray-700" size={18} />
+                                </button>
+                              </div>
+
                               <p className="font-medium text-green-600 text-lg">
                                 $
                                 {(item.price * (item.quantity || 1)).toFixed(2)}
@@ -93,7 +134,8 @@ const Cart = ({ isOpen, onClose }) => {
               <p className="mt-0.5 text-sm text-gray-500">
                 Shipping and taxes calculated at checkout.
               </p>
-              <div className="mt-6">
+
+              <div className="mt-6 space-y-3">
                 <button
                   onClick={() => {
                     onClose();
@@ -103,10 +145,18 @@ const Cart = ({ isOpen, onClose }) => {
                       100
                     );
                   }}
-                  className="w-full bg-green-700 border border-transparent rounded-md py-3 px-4 text-base font-medium text-white hover:bg-amber-400"
+                  className="w-full bg-green-700 border border-transparent rounded-md py-3 px-4 text-base font-medium text-lg text-white hover:bg-amber-400"
                   disabled={cart.length === 0}
                 >
                   Checkout
+                </button>
+
+                <button
+                  onClick={handleClearCart}
+                  className="w-full bg-red-600 border border-transparent rounded-md py-3 px-4 text-base font-medium text-lg text-white hover:bg-red-700"
+                  disabled={cart.length === 0}
+                >
+                  Clear Cart
                 </button>
               </div>
             </div>
