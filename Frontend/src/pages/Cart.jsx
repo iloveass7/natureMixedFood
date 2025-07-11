@@ -6,6 +6,14 @@ import { getLocalCart, saveLocalCart, clearCart } from "../utils/cart.jsx";
 const Cart = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+    quantity: 0,
+    productName: ""
+  });
+  const [removedItemId, setRemovedItemId] = useState(null);
 
   useEffect(() => {
     const loadCart = () => {
@@ -16,7 +24,7 @@ const Cart = ({ isOpen, onClose }) => {
     loadCart();
 
     const handleCartUpdate = () => {
-      loadCart(); // Update cart when event is fired
+      loadCart();
     };
 
     window.addEventListener("cartUpdated", handleCartUpdate);
@@ -26,29 +34,54 @@ const Cart = ({ isOpen, onClose }) => {
     };
   }, []);
 
-
+  const showNotification = (message, type = "update", quantity = 0, productName = "") => {
+    setNotification({ show: true, message, type, quantity, productName });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 2000);
+  };
 
   const handleQuantityChange = (productId, delta) => {
     const updatedCart = cart
       .map((item) => {
         if (item._id === productId) {
           const newQty = (item.quantity || 1) + delta;
-          return newQty > 0 ? { ...item, quantity: newQty } : null;
+          if (newQty <= 0) {
+            setRemovedItemId(productId);
+            setTimeout(() => setRemovedItemId(null), 500);
+            showNotification(
+              `${item.name} removed from cart`,
+              "remove",
+              0,
+              item.name
+            );
+            return null;
+          }
+          
+          const action = delta > 0 ? "Increased" : "Decreased";
+          showNotification(
+            `${action} ${item.name} quantity`,
+            "update",
+            newQty,
+            item.name
+          );
+          
+          return { ...item, quantity: newQty };
         }
         return item;
       })
-      .filter(Boolean); // Remove items with quantity <= 0
+      .filter(Boolean);
 
     setCart(updatedCart);
     saveLocalCart(updatedCart);
   };
 
   const handleClearCart = () => {
+    showNotification("Cart cleared", "remove");
     clearCart();
     setCart([]);
-    window.location.reload(); // ✅ This refreshes the page
+    setTimeout(() => window.location.reload(), 1000);
   };
-
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * (item.quantity || 1),
@@ -91,7 +124,12 @@ const Cart = ({ isOpen, onClose }) => {
                   ) : (
                     <ul className="-my-6 divide-y divide-gray-200">
                       {cart.map((item, idx) => (
-                        <li key={idx} className="py-6 flex gap-4">
+                        <li 
+                          key={idx} 
+                          className={`py-6 flex gap-4 transition-all duration-300 ${
+                            removedItemId === item._id ? "bg-red-100" : ""
+                          }`}
+                        >
                           <img
                             src={item.images?.[0] || "placeholder.jpg"}
                             alt={item.name}
@@ -183,6 +221,48 @@ const Cart = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Enhanced Notification Popup */}
+      {notification.show && (
+        <div className={`fixed bottom-10 left-300 transform -translate-x-1/2 ${
+          notification.type === "remove" ? "bg-red-500" : 
+          notification.type === "update" ? "bg-amber-500" : "bg-green-600"
+        } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d={notification.type === "remove" ? "M6 18L18 6M6 6l12 12" : "M5 13l4 4L19 7"}
+            />
+          </svg>
+          <div >
+            <span className="font-medium">{notification.message}</span>
+            {notification.type === "update" && (
+              <span className="ml-2 font-bold">(Now: {notification.quantity})</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translate(-50%, 20px); }
+          10% { opacity: 1; transform: translate(-50%, 0); }
+          90% { opacity: 1; transform: translate(-50%, 0); }
+          100% { opacity: 0; transform: translate(-50%, 20px); }
+        }
+        .animate-fade-in-out {
+          animation: fadeInOut 3s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 };

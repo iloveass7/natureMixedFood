@@ -10,9 +10,15 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [quantity, setQuantity] = useState(0); // Start with 0
+  const [quantity, setQuantity] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+    quantity: 0
+  });
   const { id } = useParams();
 
   useEffect(() => {
@@ -47,6 +53,13 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id]);
 
+  const showNotification = (message, type = "add", quantity = 0) => {
+    setNotification({ show: true, message, type, quantity });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 2000);
+  };
+
   const updateCartItemQuantity = (newQuantity) => {
     if (!product) return;
 
@@ -55,18 +68,18 @@ const ProductDetails = () => {
 
     if (existingIndex >= 0) {
       if (newQuantity <= 0) {
-        // Remove item if quantity is 0
         cart.splice(existingIndex, 1);
         setIsInCart(false);
+        showNotification(`${product.name} removed from cart`, "remove");
       } else {
-        // Update quantity
         cart[existingIndex].quantity = newQuantity;
         setIsInCart(true);
+        showNotification(`Updated ${product.name} quantity`, "update", newQuantity);
       }
     } else if (newQuantity > 0) {
-      // Add new item only if quantity is positive
       cart.push({ ...product, quantity: newQuantity });
       setIsInCart(true);
+      showNotification(`${product.name} added to cart`, "add", newQuantity);
     }
 
     saveLocalCart(cart);
@@ -93,7 +106,7 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     if (!product || quantity <= 0) return;
-    
+
     updateCartItemQuantity(quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
@@ -104,7 +117,7 @@ const ProductDetails = () => {
   if (!product) return <div className="text-center py-10">Product not found</div>;
 
   return (
-    <div className="min-h-auto w-full px-4 md:px-36 py-10 pb-16">
+    <div className="min-h-auto w-full px-4 md:px-36 py-10 pb-16 relative">
       <div className="flex flex-col lg:flex-row gap-8">
         {/* LEFT SECTION */}
         <div className="w-full lg:w-1/2 px-4 h-[700px] flex flex-col justify-between">
@@ -178,16 +191,16 @@ const ProductDetails = () => {
             <button
               onClick={handleAddToCart}
               disabled={quantity <= 0}
-              className={`mt-10 text-xl ${isAdded 
-                ? "bg-amber-500" 
-                : quantity <= 0 
-                  ? "bg-gray-400 cursor-not-allowed" 
+              className={`mt-10 text-xl ${isAdded
+                ? "bg-amber-500"
+                : quantity <= 0
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-green-600 hover:bg-amber-500"} 
               text-white w-full py-4 rounded font-bold flex items-center justify-center gap-2 transition`}
             >
               {isAdded ? (
                 <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-xl" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   Added to Cart!
@@ -256,6 +269,47 @@ const ProductDetails = () => {
           </div>
         </div>
       )}
+
+      {/* Notification Popup */}
+      {notification.show && (
+        <div className={`fixed bottom-10 left-320 transform -translate-x-1/2 ${notification.type === "remove" ? "bg-red-500" :
+            notification.type === "update" ? "bg-amber-500" : "bg-green-600"
+          } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out text-lg`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d={notification.type === "remove" ? "M6 18L18 6M6 6l12 12" : "M5 13l4 4L19 7"}
+            />
+          </svg>
+          <div>
+            <span className="font-medium">{notification.message}</span>
+            {notification.type === "update" && (
+              <span className="ml-2 font-bold">(Now: {quantity})</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translate(-50%, 20px); }
+          10% { opacity: 1; transform: translate(-50%, 0); }
+          90% { opacity: 1; transform: translate(-50%, 0); }
+          100% { opacity: 0; transform: translate(-50%, 20px); }
+        }
+        .animate-fade-in-out {
+          animation: fadeInOut 3s ease-in-out forwards;
+        }
+      `}</style>
     </div>
   );
 };
