@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Oval } from "react-loader-spinner";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -55,7 +54,7 @@ const AdminLogin = () => {
       </div>
 
       {/* Right side - admin login form */}
-<div className="w-full md:w-1/2 min-h-screen flex items-center justify-center p-4 md:p-8">
+      <div className="w-full md:w-1/2 min-h-screen flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md md:max-w-2xl h-170 md:h-170 flex flex-col justify-center space-y-6 md:space-y-12 p-6 md:p-14 border border-red-500 shadow-lg md:shadow-2xl rounded-lg">
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-red-700">
             Admin Login
@@ -101,26 +100,17 @@ const AdminLogin = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${
-                loading ? "bg-red-600 opacity-60 cursor-not-allowed" : "bg-red-600 hover:bg-amber-500"
-              }`}
+              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${loading ? "bg-red-600 opacity-60 cursor-not-allowed" : "bg-red-600 hover:bg-amber-500"
+                }`}
               style={{ minHeight: "44px" }}
             >
               {loading ? (
-                <Oval
-                  height={24}
-                  width={24}
-                  color="#ffffff"
-                  visible={true}
-                  ariaLabel="oval-loading"
-                  secondaryColor="#ffffff"
-                  strokeWidth={6}
-                  strokeWidthSecondary={6}
-                />
+                <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 "Admin Login"
               )}
             </button>
+
           </form>
 
           {/* <div className="text-center text-gray-600 text-base md:text-lg">

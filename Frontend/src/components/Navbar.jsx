@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingCart, LogOut } from 'lucide-react';
 import Cart from '../pages/Cart';
 import SearchSidebar from './SearchSidebar';
+import { getLocalCart } from '../utils/cart.jsx';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [cartCount, setCartCount] = useState(0);
+
   const navigate = useNavigate();
 
   const isUserLoggedIn = localStorage.getItem('token') || localStorage.getItem('userData');
@@ -31,6 +34,28 @@ const Navbar = () => {
   const dispatchSidebarToggle = (open) => {
     window.dispatchEvent(new CustomEvent("toggleSidebars", { detail: open }));
   };
+
+  const updateCartCount = () => {
+    const cart = getLocalCart();
+    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    setCartCount(totalItems);
+  };
+
+  useEffect(() => {
+    updateCartCount();
+
+    // Update when cart drawer closes (in case items changed)
+    const handleStorageUpdate = () => updateCartCount();
+    window.addEventListener("storage", handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!cartOpen) updateCartCount(); // resync when cart closes
+  }, [cartOpen]);
 
   return (
     <>
@@ -69,7 +94,6 @@ const Navbar = () => {
               <Search size={31} />
             </button>
 
-            {/* Only show cart if user is logged in (not admin) */}
             {isUserLoggedIn && !isAdminLoggedIn && (
               <button
                 onClick={() => {
@@ -80,11 +104,14 @@ const Navbar = () => {
                 title="Cart"
               >
                 <ShoppingCart size={31} />
-                <span className="absolute -top-1 -right-2 bg-red-600 text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-2 bg-red-600 text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
               </button>
             )}
 
-            {/* Only show logout if either user or admin is logged in */}
             {(isUserLoggedIn || isAdminLoggedIn) && (
               <button onClick={handleLogout} className="hover:text-red-500" title="Logout">
                 <LogOut size={31} />

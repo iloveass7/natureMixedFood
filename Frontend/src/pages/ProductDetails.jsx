@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { ShoppingCart, Lock, Truck, Leaf } from "lucide-react";
+import { ShoppingCart, Lock, Truck, Leaf, Plus, Minus } from "lucide-react";
 import Loader from "../components/Loader";
+import { addToCart, getLocalCart, saveLocalCart } from "../utils/cart";
 
 const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -9,6 +10,8 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
   const { id } = useParams();
 
   useEffect(() => {
@@ -20,6 +23,14 @@ const ProductDetails = () => {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setProduct(data);
+        
+        // Check if product already exists in cart and set initial quantity
+        const cart = getLocalCart();
+        const cartItem = cart.find(item => item._id === data._id);
+        if (cartItem) {
+          setQuantity(cartItem.quantity);
+        }
+        
         setError(null);
       } catch (err) {
         console.error("Error fetching product:", err);
@@ -31,6 +42,47 @@ const ProductDetails = () => {
 
     fetchProduct();
   }, [id]);
+
+  const updateCartItemQuantity = (newQuantity) => {
+    if (!product) return;
+    
+    const cart = getLocalCart();
+    const existingIndex = cart.findIndex(item => item._id === product._id);
+    
+    if (existingIndex >= 0) {
+      // Update existing item
+      cart[existingIndex].quantity = newQuantity;
+    } else {
+      // Add new item (though this case shouldn't happen with increment/decrement)
+      cart.push({ ...product, quantity: newQuantity });
+    }
+    
+    saveLocalCart(cart);
+    setQuantity(newQuantity);
+    window.location.reload(); // Refresh the page after quantity change
+  };
+
+  const incrementQuantity = () => {
+    const newQuantity = Math.min(quantity + 1, 10);
+    updateCartItemQuantity(newQuantity);
+  };
+
+  const decrementQuantity = () => {
+    const newQuantity = Math.max(quantity - 1, 1);
+    updateCartItemQuantity(newQuantity);
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    // This will add or increment the item in cart
+    addToCart({ ...product, quantity: 1 });
+    setIsAdded(true);
+    
+    // Reset the feedback after 2 seconds
+    setTimeout(() => setIsAdded(false), 2000);
+    window.location.reload(); // Also refresh after adding to cart
+  };
 
   if (loading) return <Loader />;
   if (error) return <div className="text-center text-red-500 py-10">{error}</div>;
@@ -84,20 +136,46 @@ const ProductDetails = () => {
 
           <div className="flex items-center gap-4 mt-4">
             <label className="text-gray-600 text-xl font-semibold">Quantity:</label>
-            <select className="border border-gray-300 py-2 px-4 rounded hover:border-green-500">
-              {[1, 2, 3, 4, 5].map((qty) => (
-                <option key={qty} value={qty}>
-                  {qty}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={decrementQuantity}
+                className="w-8 h-8 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+              >
+                <Minus className="text-gray-700" size={18} />
+              </button>
+
+              <span className="text-base font-medium px-4">
+                {quantity}
+              </span>
+
+              <button
+                onClick={incrementQuantity}
+                className="w-8 h-8 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+              >
+                <Plus className="text-gray-700" size={18} />
+              </button>
+            </div>
           </div>
 
-          <button className="mt-10 text-lg bg-green-600 hover:bg-amber-500 text-white w-full py-4 rounded font-bold flex items-center justify-center gap-2 transition">
-            <ShoppingCart size={20} /> Add to Cart
+          <button 
+            onClick={handleAddToCart}
+            className={`mt-10 text-lg ${isAdded ? 'bg-amber-500' : 'bg-green-600 hover:bg-amber-500'} text-white w-full py-4 rounded font-bold flex items-center justify-center gap-2 transition`}
+          >
+            {isAdded ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Added to Cart!
+              </>
+            ) : (
+              <>
+                <ShoppingCart size={20} /> Add to Cart
+              </>
+            )}
           </button>
 
-          {/* Feature Cards */}
+          {/* Feature Cards - Maintained exactly as in original */}
           <div className="flex flex-col space-y-3 mt-6">
             <div className="flex items-center gap-4 bg-gray-50 shadow-md rounded p-4 hover:bg-green-200">
               <div className="w-12 h-12 bg-white border rounded-full flex items-center justify-center">
