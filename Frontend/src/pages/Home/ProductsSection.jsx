@@ -5,6 +5,11 @@ import { addToCart, replaceCartWithSingleItem } from "../../utils/cart.jsx";
 
 const ProductsSection = ({ products, loading }) => {
   const [showAll, setShowAll] = useState(false);
+  const [notification, setNotification] = useState({ 
+    show: false, 
+    message: "", 
+    type: "" 
+  });
   const navigate = useNavigate();
 
   const getProductsPerRow = () => {
@@ -12,6 +17,26 @@ const ProductsSection = ({ products, loading }) => {
     if (window.innerWidth >= 1024) return 4;
     if (window.innerWidth >= 640) return 2;
     return 1;
+  };
+
+  const showNotification = (message, type = "add") => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 2000);
+  };
+
+  const handleAddToCart = (product, e) => {
+    e.stopPropagation();
+    addToCart(product);
+    showNotification(`${product.name} added to cart`, "add");
+  };
+
+  const handleBuyNow = (product, e) => {
+    e.stopPropagation();
+    replaceCartWithSingleItem(product);
+    showNotification("Ready for checkout", "buy");
+    navigate("/checkout", { state: { fromCart: false } });
   };
 
   const productsPerRow = getProductsPerRow();
@@ -70,21 +95,14 @@ const ProductsSection = ({ products, loading }) => {
         {/* Action Buttons */}
         <div className="flex flex-col gap-2 my-4">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product); // ✅ Triggers update via cart utils
-            }}
+            onClick={(e) => handleAddToCart(product, e)}
             className="w-full bg-yellow-500 text-white py-2 rounded font-medium hover:bg-green-100 hover:text-green-600 transition"
           >
             Add to Cart
           </button>
 
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              replaceCartWithSingleItem(product);
-              navigate("/checkout", { state: { fromCart: false } }); // Explicitly set fromCart: false
-            }}
+            onClick={(e) => handleBuyNow(product, e)}
             className="w-full bg-green-700 text-white py-2 rounded font-medium hover:bg-yellow-500 transition"
           >
             Buy Now
@@ -95,7 +113,7 @@ const ProductsSection = ({ products, loading }) => {
   );
 
   return (
-    <section className="px-4 md:px-20 lg:px-40 py-2">
+    <section className="px-4 md:px-20 lg:px-40 py-2 relative">
       <h2 className="text-[2.5rem] sm:text-[2.5rem] md:text-[2.8rem] font-bold mb-10 text-center text-green-900 hover:text-amber-400">
         আমাদের পণ্যসমূহ
       </h2>
@@ -107,7 +125,9 @@ const ProductsSection = ({ products, loading }) => {
           {/* Mobile Slider View */}
           <div className="flex sm:hidden gap-4 overflow-x-auto pb-4 mb-12 px-1 snap-x snap-mandatory scroll-smooth">
             {visibleProducts.map((product) => (
-              <div className="snap-center shrink-0">{renderCard(product)}</div>
+              <div className="snap-center shrink-0" key={product._id}>
+                {renderCard(product)}
+              </div>
             ))}
           </div>
 
@@ -129,6 +149,42 @@ const ProductsSection = ({ products, loading }) => {
           )}
         </>
       )}
+
+      {/* Notification Popup */}
+      {notification.show && (
+        <div className={`fixed bottom-10 left-300 transform -translate-x-1/2 ${
+          notification.type === "buy" ? "bg-blue-600" : "bg-green-600"
+        } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span className="font-medium">{notification.message}</span>
+        </div>
+      )}
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translate(-50%, 20px); }
+          10% { opacity: 1; transform: translate(-50%, 0); }
+          90% { opacity: 1; transform: translate(-50%, 0); }
+          100% { opacity: 0; transform: translate(-50%, 20px); }
+        }
+        .animate-fade-in-out {
+          animation: fadeInOut 3s ease-in-out forwards;
+        }
+      `}</style>
     </section>
   );
 };
