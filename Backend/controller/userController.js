@@ -17,15 +17,18 @@ const loginUser = async (req, res) => {
       return res.json({ success: false, message: "Invalid credentials" });
     }
     const token = createUserToken(user._id);
-    // console.log(token);
-    // console.log("JWT_SECRET:", process.env.JWT_SECRET);
+    
     res.json({
       success: true,
       token,
       user: {
+        _id: user._id,
         name: user.name,
         email: user.email,
-        cartData: user.cartData,
+        phone: user.phone,
+        district: user.district,
+        division: user.division,
+        cartData: user.cartData
       },
     });
   } catch (err) {
@@ -36,7 +39,7 @@ const loginUser = async (req, res) => {
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone, district, division } = req.body;
     const exists = await userModel.findOne({ email });
     if (exists) {
       return res.json({ success: false, message: "User already exists" });
@@ -56,12 +59,25 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: hashPassword,
+      phone,
+      district,
+      division
     });
     await user.save();
-    const token = createUserToken(user._id); // Use the function for user token
+    const token = createUserToken(user._id);
+    
     res.json({
       success: true,
       token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        district: user.district,
+        division: user.division,
+        cartData: user.cartData
+      },
     });
   } catch (err) {
     console.log(err);

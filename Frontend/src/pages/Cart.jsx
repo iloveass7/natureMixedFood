@@ -8,9 +8,25 @@ const Cart = ({ isOpen, onClose }) => {
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
-    const storedCart = getLocalCart();
-    setCart(storedCart);
+    const loadCart = () => {
+      const storedCart = getLocalCart();
+      setCart(storedCart);
+    };
+
+    loadCart();
+
+    const handleCartUpdate = () => {
+      loadCart(); // Update cart when event is fired
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+    };
   }, []);
+
+
 
   const handleQuantityChange = (productId, delta) => {
     const updatedCart = cart
@@ -30,7 +46,9 @@ const Cart = ({ isOpen, onClose }) => {
   const handleClearCart = () => {
     clearCart();
     setCart([]);
+    window.location.reload(); // ✅ This refreshes the page
   };
+
 
   const subtotal = cart.reduce(
     (acc, item) => acc + item.price * (item.quantity || 1),
@@ -65,9 +83,11 @@ const Cart = ({ isOpen, onClose }) => {
               <div className="mt-8">
                 <div className="flow-root">
                   {cart.length === 0 ? (
-                    <p className="text-center text-gray-500">
-                      Your cart is empty.
-                    </p>
+                    <div className="flex items-center justify-center h-full min-h-[550px] lg:min-h-[650px]">
+                      <p className="text-center text-gray-500 text-xl">
+                        Your cart is empty.
+                      </p>
+                    </div>
                   ) : (
                     <ul className="-my-6 divide-y divide-gray-200">
                       {cart.map((item, idx) => (
@@ -93,9 +113,9 @@ const Cart = ({ isOpen, onClose }) => {
                                   onClick={() =>
                                     handleQuantityChange(item._id, -1)
                                   }
-                                  className="w-8 h-8 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+                                  className="w-8 h-8 bg-green-700 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
                                 >
-                                  <Minus className="text-gray-700" size={18} />
+                                  <Minus className="text-white" size={18} />
                                 </button>
 
                                 <span className="text-base font-medium px-4">
@@ -106,9 +126,9 @@ const Cart = ({ isOpen, onClose }) => {
                                   onClick={() =>
                                     handleQuantityChange(item._id, 1)
                                   }
-                                  className="w-8 h-8 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+                                  className="w-8 h-8 bg-green-700 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
                                 >
-                                  <Plus className="text-gray-700" size={18} />
+                                  <Plus className="text-white" size={18} />
                                 </button>
                               </div>
 

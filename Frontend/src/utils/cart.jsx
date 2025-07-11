@@ -23,6 +23,7 @@ export const getCart = () => {
 
 export const saveLocalCart = (cart) => {
   localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(cart));
+  window.dispatchEvent(new Event("cartUpdated")); // 🔥 NEW
 };
 
 export const saveCart = (cart) => {
@@ -40,8 +41,14 @@ export const addToCart = (product) => {
   }
 
   saveLocalCart(cart);
-  return cart; // Return the updated cart
+
+  // Dispatch event to notify listeners (like Navbar)
+  window.dispatchEvent(new Event("cartUpdated"));
+
+  return cart;
 };
+
+
 
 export const replaceCartWithSingleItem = (product) => {
   // Clear both carts first
