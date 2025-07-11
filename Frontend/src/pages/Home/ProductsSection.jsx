@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
+import { addToCart, replaceCartWithSingleItem } from "../../utils/cart.jsx";
 
 const ProductsSection = ({ products, loading }) => {
   const [showAll, setShowAll] = useState(false);
@@ -9,14 +10,16 @@ const ProductsSection = ({ products, loading }) => {
   const getProductsPerRow = () => {
     if (typeof window === "undefined") return 4;
     if (window.innerWidth >= 1024) return 4;
-    if (window.innerWidth >= 640) return 2; 
-    return 1; 
+    if (window.innerWidth >= 640) return 2;
+    return 1;
   };
 
   const productsPerRow = getProductsPerRow();
-  const maxVisibleWithoutButton = productsPerRow * 2; 
+  const maxVisibleWithoutButton = productsPerRow * 2;
   const shouldShowButton = products.length > maxVisibleWithoutButton;
-  const visibleProducts = showAll ? products : products.slice(0, maxVisibleWithoutButton);
+  const visibleProducts = showAll
+    ? products
+    : products.slice(0, maxVisibleWithoutButton);
 
   if (loading) {
     return <Loader />;
@@ -53,18 +56,25 @@ const ProductsSection = ({ products, loading }) => {
             className="text-xl font-bold overflow-hidden leading-tight"
             title={product.name}
           >
-            {product.name.length > 15 ? product.name.slice(0, 15) + "..." : product.name}
+            {product.name.length > 15
+              ? product.name.slice(0, 15) + "..."
+              : product.name}
           </h3>
 
-
-          <p className="text-gray-500 text-[14px] mt-1">Delivered in 2-4 days</p>
+          <p className="text-gray-500 text-[14px] mt-1">
+            Delivered in 2-4 days
+          </p>
           <p className="text-[18px] font-bold mt-1">${product.price}</p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-2 my-4">
           <button
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              addToCart(product);
+              window.location.reload();
+            }}
             className="w-full bg-yellow-500 text-white py-2 rounded font-medium hover:bg-green-100 hover:text-green-600 transition"
           >
             Add to Cart
@@ -72,7 +82,8 @@ const ProductsSection = ({ products, loading }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              navigate("/checkout", { state: { product } });
+              replaceCartWithSingleItem(product);
+              navigate("/checkout", { state: { fromCart: false } }); // Explicitly set fromCart: false
             }}
             className="w-full bg-green-700 text-white py-2 rounded font-medium hover:bg-yellow-500 transition"
           >
@@ -82,7 +93,6 @@ const ProductsSection = ({ products, loading }) => {
       </div>
     </div>
   );
-
 
   return (
     <section className="px-4 md:px-20 lg:px-40 py-2">
