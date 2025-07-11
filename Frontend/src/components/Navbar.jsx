@@ -44,14 +44,18 @@ const Navbar = () => {
   useEffect(() => {
     updateCartCount();
 
-    // Update when cart drawer closes (in case items changed)
-    const handleStorageUpdate = () => updateCartCount();
-    window.addEventListener("storage", handleStorageUpdate);
+    const handleCartUpdate = () => updateCartCount();
+
+    // Listen for cart updates
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    window.addEventListener("storage", handleCartUpdate);
 
     return () => {
-      window.removeEventListener("storage", handleStorageUpdate);
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+      window.removeEventListener("storage", handleCartUpdate);
     };
   }, []);
+  ;
 
   useEffect(() => {
     if (!cartOpen) updateCartCount(); // resync when cart closes

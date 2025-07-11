@@ -1,25 +1,80 @@
 import React, { useState, useEffect } from "react";
-import { Wallet } from "lucide-react";
+import { Wallet, Plus, Minus } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import { getCart, getLocalCart } from "../utils/cart.jsx";
+import { getCart, getLocalCart, saveLocalCart } from "../utils/cart.jsx";
 
 const CheckoutPage = () => {
   const [cart, setCart] = useState([]);
+  const [userData, setUserData] = useState(null);
   const location = useLocation();
+
+  // Form fields state - merged firstName and lastName into fullName
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    location: '',
+    district: '',
+    division: '',
+    email: ''
+  });
 
   useEffect(() => {
     // Check if we're coming from the cart page
     const fromCart = location.state?.fromCart || false;
 
     if (fromCart) {
-      // Use local_cart when coming from cart page
       setCart(getLocalCart());
     } else {
-      // Otherwise use buy-now cart if it exists, or fall back to local_cart
       const buyNowCart = getCart();
       setCart(buyNowCart.length > 0 ? buyNowCart : getLocalCart());
     }
+
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('userData');
+    
+    if (token && storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setUserData(user);
+        // Pre-fill form with user data (except location)
+        setFormData({
+          fullName: user.name || '',
+          phone: user.phone || '',
+          location: '', // Location remains empty
+          district: user.district || '',
+          division: user.division || '',
+          email: user.email || ''
+        });
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
   }, [location.state]);
+
+  const removeFromCart = (productId) => {
+    const updatedCart = cart.filter(item => item._id !== productId);
+    setCart(updatedCart);
+    saveLocalCart(updatedCart);
+  };
+
+  const updateQuantity = (productId, newQuantity) => {
+    if (newQuantity < 1) return;
+    
+    const updatedCart = cart.map(item => 
+      item._id === productId ? { ...item, quantity: newQuantity } : item
+    );
+    setCart(updatedCart);
+    saveLocalCart(updatedCart);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   return (
     <div className="bg-white px-4 py-13 md:px-10 lg:px-32">
@@ -35,43 +90,55 @@ const CheckoutPage = () => {
           <form className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base sm:text-lg md:text-xl">
             <input
               type="text"
-              placeholder="First Name"
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
+              onChange={handleInputChange}
               required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
-              type="text"
-              placeholder="Last Name"
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="text"
+              type="tel"
+              name="phone"
               placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleInputChange}
               required
               className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
               type="text"
-              placeholder="Location"
+              name="location"
+              placeholder="Location (Street Address, House No)"
+              value={formData.location}
+              onChange={handleInputChange}
               required
               className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
               type="text"
+              name="district"
               placeholder="District"
+              value={formData.district}
+              onChange={handleInputChange}
               required
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
               type="text"
+              name="division"
               placeholder="Division"
+              value={formData.division}
+              onChange={handleInputChange}
               required
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
-              type="text"
-              placeholder="Postal Code"
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleInputChange}
               required
               className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
@@ -146,36 +213,62 @@ const CheckoutPage = () => {
 
           {/* Bag Summary */}
           <div>
-            <h3 className="font-semibold mb-3 text-lg sm:text-xl text-green-600">
-              Arrives in 4–7 days
+            <h3 className="font-bold my-7 text-lg sm:text-4xl text-green-800">
+              Order Details
             </h3>
 
-            {cart.map((item, index) => (
-              <div key={index} className="flex gap-4 sm:gap-6 mb-6">
-                <img
-                  src={item.images[0]}
-                  alt={item.name}
-                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded border border-white"
-                />
-                <div className="text-sm sm:text-base text-gray-700">
-                  <p className="font-semibold">{item.name}</p>
-                  <p>Quantity: {item.quantity}</p>
-                  <p>
-                    <span className="text-green-600">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </span>
-                  </p>
-                  <div className="flex gap-3 mt-1">
-                    <button className="underline hover:text-green-500">
-                      Edit
-                    </button>
-                    <button className="underline hover:text-red-500">
-                      Remove
-                    </button>
+            {cart.length === 0 ? (
+              <p className="text-center text-gray-500 text-xl py-27">
+                Your cart is empty.
+              </p>
+            ) : (
+              cart.map((item, index) => (
+                <div key={index} className="flex gap-4 sm:gap-6 mb-6">
+                  <img
+                    src={item.images[0]}
+                    alt={item.name}
+                    className="w-20 h-20 sm:w-25 sm:h-25 object-cover rounded border border-white"
+                  />
+                  <div className="text-sm sm:text-base text-gray-700 flex-1">
+                    <div className="flex justify-between items-start">
+                      <p className="font-semibold text-lg">{item.name}</p>
+
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-4">
+                        <span>Quantity:</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                            className={`w-6 h-6 ${item.quantity <= 1 ? 'bg-gray-200' : 'bg-gray-100 hover:bg-amber-400'} rounded-md flex items-center justify-center transition`}
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="text-gray-700" size={14} />
+                          </button>
+                          <span className="text-base font-medium px-2">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                            className="w-6 h-6 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
+                          >
+                            <Plus className="text-gray-700" size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-green-600">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
+                      
+                    </div>
+                      <button 
+                        onClick={() => removeFromCart(item._id)}
+                        className="bg-red-600 text-white mt-3 px-4 py-1 rounded text-sm hover:bg-red-800 transition"
+                      >
+                        Remove
+                      </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

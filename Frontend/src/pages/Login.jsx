@@ -9,43 +9,55 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const loginHandler = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+const loginHandler = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    try {
-      const { data } = await axios.post("http://localhost:8000/api/user/login", {
-        email,
-        password,
-      });
+  try {
+    const { data } = await axios.post("http://localhost:8000/api/user/login", {
+      email,
+      password,
+    });
 
-      if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userData", JSON.stringify(data.user));
-        navigate("/");
-      } else {
-        setError(data.message || "Login failed");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
-    } finally {
-      setLoading(false);
+    if (data.success) {
+      // Store all user data in localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userData", JSON.stringify({
+        _id: data.user._id,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone || "",
+        district: data.user.district || "",
+        division: data.user.division || "",
+        cartData: data.user.cartData || {},
+        isGuest: false
+      }));
+      navigate("/");
+    } else {
+      setError(data.message || "Login failed");
     }
-  };
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const guestHandler = () => {
-    const guestUser = {
-      id: "guest",
-      name: "Guest",
-      profileImage: "",
-      token: "",
-      isGuest: true,
-      cartData: {},
-    };
-    localStorage.setItem("userData", JSON.stringify(guestUser));
-    navigate("/");
-  };
+const guestHandler = () => {
+  // Store minimal guest data in localStorage
+  localStorage.setItem("userData", JSON.stringify({
+    id: "guest",
+    name: "Guest",
+    email: "",
+    phone: "",
+    district: "",
+    division: "",
+    cartData: {},
+    isGuest: true
+  }));
+  navigate("/");
+};
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">

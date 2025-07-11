@@ -72,13 +72,13 @@ const ProductsSection = ({ products, loading }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              addToCart(product);
-              window.location.reload();
+              addToCart(product); // ✅ Triggers update via cart utils
             }}
             className="w-full bg-yellow-500 text-white py-2 rounded font-medium hover:bg-green-100 hover:text-green-600 transition"
           >
             Add to Cart
           </button>
+
           <button
             onClick={(e) => {
               e.stopPropagation();

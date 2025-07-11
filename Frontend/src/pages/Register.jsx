@@ -7,7 +7,10 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    phone: "",
+    district: "",
+    division: ""
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +38,10 @@ const Register = () => {
       const { data } = await axios.post("http://localhost:8000/api/user/register", {
         name: form.name,
         email: form.email,
-        password: form.password
+        password: form.password,
+        phone: form.phone,
+        district: form.district,
+        division: form.division
       });
 
       if (data.success) {
@@ -73,7 +79,7 @@ const Register = () => {
 
       {/* Right side - register form */}
       <div className="w-full md:w-1/2 min-h-screen flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-md md:max-w-2xl h-190 flex flex-col justify-center space-y-10 md:space-y-12 p-6 md:p-14 border border-green-400 shadow-lg md:shadow-2xl rounded-lg">
+        <div className="w-full max-w-md md:max-w-2xl h-auto flex flex-col justify-center space-y-6 md:space-y-8 p-6 md:p-10 border border-green-400 shadow-lg md:shadow-2xl rounded-lg">
           <h2 className="text-center text-2xl md:text-3xl font-extrabold text-green-700">
             Create your account
           </h2>
@@ -84,7 +90,7 @@ const Register = () => {
             </div>
           )}
 
-          <form className="space-y-4 md:space-y-6" onSubmit={registerHandler}>
+          <form className="space-y-4 md:space-y-5" onSubmit={registerHandler}>
             <div>
               <label htmlFor="name" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
                 Full Name
@@ -113,6 +119,51 @@ const Register = () => {
                 className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
                 placeholder="johndoe@example.com"
                 value={form.email}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
+                placeholder="+8801XXXXXXXXX"
+                value={form.phone}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="district" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
+                District
+              </label>
+              <input
+                type="text"
+                id="district"
+                name="district"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
+                placeholder="Your district"
+                value={form.district}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="division" className="block text-base md:text-lg font-medium text-gray-700 mb-1">
+                Division
+              </label>
+              <input
+                type="text"
+                id="division"
+                name="division"
+                className="w-full px-3 py-2 md:px-4 md:py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-base md:text-lg"
+                placeholder="Your division"
+                value={form.division}
                 onChange={handleChange}
               />
             </div>
@@ -153,32 +204,9 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${loading ? "bg-green-500 opacity-60 cursor-not-allowed" : "bg-green-700 hover:bg-amber-500"
-                }`}
-              style={{ minHeight: "44px" }}
-            >
-              {loading ? (
-                <Oval
-                  height={24}
-                  width={24}
-                  color="#ffffff"
-                  visible={true}
-                  ariaLabel="oval-loading"
-                  secondaryColor="#ffffff"
-                  strokeWidth={6}
-                  strokeWidthSecondary={6}
-                />
-              ) : (
-                "Register"
-              )}
-            </button><button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-2 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${loading
-                  ? "bg-green-500 opacity-60 cursor-not-allowed"
-                  : "bg-green-700 hover:bg-amber-500"
-                }`}
-              style={{ minHeight: "44px" }}
+              className={`w-full py-3 text-base md:text-lg font-semibold text-white rounded-md transition flex justify-center items-center ${
+                loading ? "bg-green-500 opacity-60 cursor-not-allowed" : "bg-green-700 hover:bg-amber-500"
+              }`}
             >
               {loading ? (
                 <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin" />
@@ -186,7 +214,6 @@ const Register = () => {
                 "Register"
               )}
             </button>
-
           </form>
 
           <div className="text-center text-gray-600 text-base md:text-lg">
