@@ -3,10 +3,10 @@ import { sendOrderEmail } from "../utils/mailer.js";
 
 const order = async (req, res) => {
   try {
-    const { user, products, totalPrice, address, number } = req.body;
+    const { user, guestInfo, products, totalPrice, address, number } = req.body;
 
     if (
-      !user ||
+      (!user && !guestInfo) || // Either user or guestInfo must be present
       !products.length ||
       !totalPrice ||
       !address?.location ||
@@ -14,11 +14,29 @@ const order = async (req, res) => {
       !address?.division ||
       !number
     ) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({
+        message: "All fields are required",
+        details: {
+          missingFields: {
+            user: !user && !guestInfo ? "Required" : "Provided",
+            products: !products.length ? "Required" : "Provided",
+            totalPrice: !totalPrice ? "Required" : "Provided",
+            address: !address
+              ? "Required"
+              : {
+                  location: !address?.location ? "Required" : "Provided",
+                  district: !address?.district ? "Required" : "Provided",
+                  division: !address?.division ? "Required" : "Provided",
+                },
+            number: !number ? "Required" : "Provided",
+          },
+        },
+      });
     }
 
     const newOrder = new orderModel({
-      user,
+      user: user || null, // Set to null if guest
+      guestInfo: !user ? guestInfo : undefined, // Only include guestInfo if not a user
       products,
       totalPrice,
       address,
