@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Wallet, Plus, Minus } from "lucide-react";
-import { useLocation } from "react-router-dom";
-import { getCart, getLocalCart, saveLocalCart } from "../utils/cart.jsx";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  getCart,
+  getLocalCart,
+  saveLocalCart,
+  clearCart,
+} from "../utils/cart.jsx";
 
 const CheckoutPage = () => {
   const [cart, setCart] = useState([]);
   const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Form fields state - merged firstName and lastName into fullName
+  // Form fields state - maintain the previous structure
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    location: '',
-    district: '',
-    division: '',
-    email: ''
+    firstName: "",
+    lastName: "",
+    phone: "",
+    location: "",
+    district: "",
+    division: "",
+    postalCode: "",
+    email: "",
   });
 
   useEffect(() => {
-    // Check if we're coming from the cart page
     const fromCart = location.state?.fromCart || false;
 
     if (fromCart) {
@@ -30,38 +39,39 @@ const CheckoutPage = () => {
     }
 
     // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('userData');
-    
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("userData");
+
     if (token && storedUser) {
       try {
         const user = JSON.parse(storedUser);
         setUserData(user);
         // Pre-fill form with user data (except location)
-        setFormData({
-          fullName: user.name || '',
-          phone: user.phone || '',
-          location: '', // Location remains empty
-          district: user.district || '',
-          division: user.division || '',
-          email: user.email || ''
-        });
+        setFormData((prev) => ({
+          ...prev,
+          firstName: user.name?.split(" ")[0] || "",
+          lastName: user.name?.split(" ")[1] || "",
+          phone: user.phone || "",
+          district: user.district || "",
+          division: user.division || "",
+          email: user.email || "",
+        }));
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error("Error parsing user data:", error);
       }
     }
   }, [location.state]);
 
   const removeFromCart = (productId) => {
-    const updatedCart = cart.filter(item => item._id !== productId);
+    const updatedCart = cart.filter((item) => item._id !== productId);
     setCart(updatedCart);
     saveLocalCart(updatedCart);
   };
 
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) return;
-    
-    const updatedCart = cart.map(item => 
+
+    const updatedCart = cart.map((item) =>
       item._id === productId ? { ...item, quantity: newQuantity } : item
     );
     setCart(updatedCart);
@@ -70,10 +80,87 @@ const CheckoutPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
+  };
+
+  const handleSubmitOrder = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Validate form fields
+      if (
+        !formData.firstName ||
+        !formData.lastName ||
+        !formData.phone ||
+        !formData.location ||
+        !formData.district ||
+        !formData.division
+      ) {
+        throw new Error("Please fill all required fields");
+      }
+
+      if (cart.length === 0) {
+        throw new Error("Your cart is empty");
+      }
+
+      // Prepare order data according to your backend schema
+      const orderData = {
+        user: userData?._id || null, // Include user ID if logged in
+        products: cart.map((item) => ({
+          product: item._id,
+          quantity: item.quantity,
+        })),
+        totalPrice: cart.reduce(
+          (acc, item) => acc + item.price * item.quantity,
+          0
+        ),
+        address: {
+          location: formData.location,
+          district: formData.district,
+          division: formData.division,
+        },
+        number: formData.phone,
+        // Status will be set to "Processing" by default in backend
+      };
+
+      // Submit order to backend
+      const response = await fetch("http://localhost:8000/api/order/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Include if using auth
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to place order");
+      }
+
+      const result = await response.json();
+
+      // Clear cart after successful order
+      clearCart();
+
+      // Redirect to order confirmation page
+      navigate("/order-confirmation", {
+        state: {
+          orderId: result.order._id,
+          orderDetails: result.order,
+        },
+      });
+    } catch (err) {
+      setError(err.message);
+      console.error("Order submission error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,16 +173,34 @@ const CheckoutPage = () => {
             Checkout
           </h2>
 
-          {/* FORM */}
-          <form className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base sm:text-lg md:text-xl">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
+          {/* FORM - Maintained the previous structure */}
+          <form
+            onSubmit={handleSubmitOrder}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base sm:text-lg md:text-xl"
+          >
             <input
               type="text"
-              name="fullName"
-              placeholder="Full Name"
-              value={formData.fullName}
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
               onChange={handleInputChange}
               required
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+            />
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              required
+              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
               type="tel"
@@ -134,6 +239,14 @@ const CheckoutPage = () => {
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
+              type="text"
+              name="postalCode"
+              placeholder="Postal Code"
+              value={formData.postalCode}
+              onChange={handleInputChange}
+              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+            />
+            <input
               type="email"
               name="email"
               placeholder="Email Address"
@@ -142,12 +255,65 @@ const CheckoutPage = () => {
               required
               className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
-          </form>
 
-          {/* CONTINUE BUTTON */}
-          <button className="w-full bg-green-700 text-white py-4 rounded text-lg sm:text-xl font-bold hover:bg-amber-400 transition">
-            Continue
-          </button>
+            {/* CONTINUE BUTTON - Now submits the order */}
+            {/* Inside your CheckoutPage component, replace the current button with this: */}
+
+            <div className="md:col-span-2 flex justify-center mt-6">
+              <button
+                type="submit"
+                disabled={loading || cart.length === 0}
+                className={`
+      relative overflow-hidden
+      w-full max-w-md
+      bg-gradient-to-r from-green-600 to-green-800
+      text-white 
+      py-5 px-8 
+      rounded-lg
+      text-xl font-bold 
+      shadow-lg
+      hover:from-green-700 hover:to-green-900
+      transition-all duration-300
+      transform hover:scale-105
+      ${loading || cart.length === 0 ? "opacity-70 cursor-not-allowed" : ""}
+    `}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center">
+                    <Wallet className="mr-2" size={20} />
+                    Place Order
+                  </span>
+                )}
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></span>
+                </span>
+              </button>
+            </div>
+          </form>
 
           {/* PAYMENT */}
           <div className="flex justify-between items-start sm:items-center gap-4 border px-4 sm:px-5 py-4 sm:py-5 rounded hover:bg-green-100 text-base sm:text-xl">
@@ -167,7 +333,7 @@ const CheckoutPage = () => {
             <input
               type="radio"
               name="payment"
-              unchecked
+              defaultChecked
               readOnly
               className="w-5 h-5 accent-green-600"
             />
@@ -232,22 +398,31 @@ const CheckoutPage = () => {
                   <div className="text-sm sm:text-base text-gray-700 flex-1">
                     <div className="flex justify-between items-start">
                       <p className="font-semibold text-lg">{item.name}</p>
-
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-4">
                         <span>Quantity:</span>
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                            className={`w-6 h-6 ${item.quantity <= 1 ? 'bg-gray-200' : 'bg-gray-100 hover:bg-amber-400'} rounded-md flex items-center justify-center transition`}
+                            onClick={() =>
+                              updateQuantity(item._id, item.quantity - 1)
+                            }
+                            className={`w-6 h-6 ${
+                              item.quantity <= 1
+                                ? "bg-gray-200"
+                                : "bg-gray-100 hover:bg-amber-400"
+                            } rounded-md flex items-center justify-center transition`}
                             disabled={item.quantity <= 1}
                           >
                             <Minus className="text-gray-700" size={14} />
                           </button>
-                          <span className="text-base font-medium px-2">{item.quantity}</span>
+                          <span className="text-base font-medium px-2">
+                            {item.quantity}
+                          </span>
                           <button
-                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                            onClick={() =>
+                              updateQuantity(item._id, item.quantity + 1)
+                            }
                             className="w-6 h-6 bg-gray-100 hover:bg-amber-400 rounded-md flex items-center justify-center transition"
                           >
                             <Plus className="text-gray-700" size={14} />
@@ -257,14 +432,13 @@ const CheckoutPage = () => {
                       <p className="text-green-600">
                         ${(item.price * item.quantity).toFixed(2)}
                       </p>
-                      
                     </div>
-                      <button 
-                        onClick={() => removeFromCart(item._id)}
-                        className="bg-red-600 text-white mt-3 px-4 py-1 rounded text-sm hover:bg-red-800 transition"
-                      >
-                        Remove
-                      </button>
+                    <button
+                      onClick={() => removeFromCart(item._id)}
+                      className="bg-red-600 text-white mt-3 px-4 py-1 rounded text-sm hover:bg-red-800 transition"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               ))
