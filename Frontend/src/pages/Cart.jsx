@@ -224,7 +224,7 @@ const Cart = ({ isOpen, onClose }) => {
 
       {/* Enhanced Notification Popup */}
       {notification.show && (
-        <div className={`fixed bottom-10 left-300 transform -translate-x-1/2 ${
+        <div className={`fixed bottom-10 left-280 transform -translate-x-1/2 ${
           notification.type === "remove" ? "bg-red-500" : 
           notification.type === "update" ? "bg-amber-500" : "bg-green-600"
         } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>

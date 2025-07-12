@@ -12,6 +12,24 @@ const ProductsSection = ({ products, loading }) => {
   });
   const navigate = useNavigate();
 
+  // Get user authentication status and type
+  const getUserType = () => {
+    const token = localStorage.getItem("token");
+    const adminToken = localStorage.getItem("adminToken");
+    const userData = localStorage.getItem("userData");
+    
+    try {
+      const user = userData ? JSON.parse(userData) : null;
+      
+      if (adminToken) return "admin";
+      if (token) return "user";
+      if (user?.name === "Guest") return "guest";
+      return "none"; // Not logged in
+    } catch (error) {
+      return "none";
+    }
+  };
+
   const getProductsPerRow = () => {
     if (typeof window === "undefined") return 4;
     if (window.innerWidth >= 1024) return 4;
@@ -23,17 +41,46 @@ const ProductsSection = ({ products, loading }) => {
     setNotification({ show: true, message, type });
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }));
-    }, 2000);
+      if (type === "login-required") {
+        navigate("/login");
+      }
+    }, 1500);
   };
 
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
+    
+    const userType = getUserType();
+    
+    if (userType === "admin") {
+      showNotification("Admins cannot add items to cart", "error");
+      return;
+    }
+    
+    if (userType === "none") {
+      showNotification("Please login to add items to cart", "login-required");
+      return;
+    }
+    
     addToCart(product);
     showNotification(`${product.name} added to cart`, "add");
   };
 
   const handleBuyNow = (product, e) => {
     e.stopPropagation();
+    
+    const userType = getUserType();
+    
+    if (userType === "admin") {
+      showNotification("Admins cannot place orders", "error");
+      return;
+    }
+    
+    if (userType === "none") {
+      showNotification("Please login to place orders", "login-required");
+      return;
+    }
+    
     replaceCartWithSingleItem(product);
     showNotification("Ready for checkout", "buy");
     navigate("/checkout", { state: { fromCart: false } });
@@ -152,8 +199,10 @@ const ProductsSection = ({ products, loading }) => {
 
       {/* Notification Popup */}
       {notification.show && (
-        <div className={`fixed bottom-10 left-300 transform -translate-x-1/2 ${
-          notification.type === "buy" ? "bg-blue-600" : "bg-green-600"
+        <div className={`fixed bottom-10 left-280 transform -translate-x-1/2 ${
+          notification.type === "buy" ? "bg-blue-600" : 
+          notification.type === "error" ? "bg-red-600" :
+          notification.type === "login-required" ? "bg-amber-500" : "bg-green-600"
         } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -166,7 +215,11 @@ const ProductsSection = ({ products, loading }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M5 13l4 4L19 7"
+              d={
+                notification.type === "error" ? "M6 18L18 6M6 6l12 12" :
+                notification.type === "login-required" ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" :
+                "M5 13l4 4L19 7"
+              }
             />
           </svg>
           <span className="font-medium">{notification.message}</span>

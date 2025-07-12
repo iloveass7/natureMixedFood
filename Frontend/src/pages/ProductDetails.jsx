@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ShoppingCart, Lock, Truck, Leaf, Plus, Minus } from "lucide-react";
 import Loader from "../components/Loader";
 import { addToCart, getLocalCart, saveLocalCart } from "../utils/cart";
@@ -20,6 +20,25 @@ const ProductDetails = () => {
     quantity: 0
   });
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  // Check user authentication status
+  const checkAuth = () => {
+    const token = localStorage.getItem("token");
+    const adminToken = localStorage.getItem("adminToken");
+    const userData = localStorage.getItem("userData");
+    
+    try {
+      const user = userData ? JSON.parse(userData) : null;
+      
+      if (adminToken) return "admin";
+      if (token) return "user";
+      if (user?.name === "Guest") return "guest";
+      return "none"; // Not logged in
+    } catch (error) {
+      return "none";
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -57,10 +76,25 @@ const ProductDetails = () => {
     setNotification({ show: true, message, type, quantity });
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }));
-    }, 2000);
+      if (type === "login-required") {
+        navigate("/login");
+      }
+    }, 1500);
   };
 
   const updateCartItemQuantity = (newQuantity) => {
+    const userType = checkAuth();
+    
+    if (userType === "admin") {
+      showNotification("Admins cannot modify cart", "error");
+      return;
+    }
+    
+    if (userType === "none") {
+      showNotification("Please login to add items to cart", "login-required");
+      return;
+    }
+
     if (!product) return;
 
     const cart = getLocalCart();
@@ -106,6 +140,13 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     if (!product || quantity <= 0) return;
+
+    const userType = checkAuth();
+    
+    if (userType === "none") {
+      showNotification("Please login to add items to cart", "login-required");
+      return;
+    }
 
     updateCartItemQuantity(quantity);
     setIsAdded(true);
@@ -272,9 +313,13 @@ const ProductDetails = () => {
 
       {/* Notification Popup */}
       {notification.show && (
-        <div className={`fixed bottom-10 left-320 transform -translate-x-1/2 ${notification.type === "remove" ? "bg-red-500" :
-            notification.type === "update" ? "bg-amber-500" : "bg-green-600"
-          } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out text-lg`}>
+        <div className={`fixed bottom-10 left-290 transform -translate-x-1/2 ${
+          notification.type === "remove" ? "bg-red-500" :
+          notification.type === "update" ? "bg-amber-500" :
+          notification.type === "error" ? "bg-red-600" :
+          notification.type === "login-required" ? "bg-amber-500" : 
+          "bg-green-600"
+        } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-10 w-10"
@@ -286,7 +331,11 @@ const ProductDetails = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d={notification.type === "remove" ? "M6 18L18 6M6 6l12 12" : "M5 13l4 4L19 7"}
+              d={
+                notification.type === "remove" || notification.type === "error" ? "M6 18L18 6M6 6l12 12" :
+                notification.type === "login-required" ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" :
+                "M5 13l4 4L19 7"
+              }
             />
           </svg>
           <div>
