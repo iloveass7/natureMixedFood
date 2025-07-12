@@ -27,7 +27,7 @@ import AllBlogs from "./pages/AllBlogs";
 import EditBlog from "./pages/Admin/EditBlog";
 import BlogDetails from "./pages/BlogDetails";
 import Loader from "./components/Loader";
-import OrderConfirmation from "./pages/OrderConfirmation";
+// import OrderConfirmation from "./pages/OrderConfirmation";
 
 const App = () => {
   return (
@@ -52,7 +52,7 @@ const App = () => {
         <Route path="/blogs" element={<AllBlogs />} />
         <Route path="/loader" element={<Loader />} />
         <Route path="/blog/:id" element={<BlogDetails />} />
-        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        {/* <Route path="/order-confirmation" element={<OrderConfirmation />} /> */}
 
         {/* Protected Admin Routes */}
         <Route
