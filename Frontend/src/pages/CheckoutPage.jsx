@@ -116,8 +116,9 @@ const CheckoutPage = () => {
       }
 
       // Prepare order data
+      // In your handleSubmitOrder function:
       const orderData = {
-        user: userData?._id || null,
+        user: userData?._id || null, // This can be null for guests
         guestInfo: !userData
           ? {
               name: formData.fullName.trim(),
