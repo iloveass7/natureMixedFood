@@ -17,8 +17,7 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     phone: "",
     location: "",
     district: "",
@@ -36,6 +35,7 @@ const CheckoutPage = () => {
       setCart(buyNowCart.length > 0 ? buyNowCart : getLocalCart());
     }
 
+    // Check if user is logged in
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("userData");
 
@@ -45,8 +45,7 @@ const CheckoutPage = () => {
         setUserData(user);
         setFormData((prev) => ({
           ...prev,
-          firstName: user.name?.split(" ")[0] || "",
-          lastName: user.name?.split(" ")[1] || "",
+          fullName: user.name || "",
           phone: user.phone || "",
           district: user.district || "",
           division: user.division || "",
@@ -86,29 +85,46 @@ const CheckoutPage = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    let isMounted = true;
 
     try {
-      if (
-        !formData.firstName ||
-        !formData.lastName ||
-        !formData.phone ||
-        !formData.location ||
-        !formData.district ||
-        !formData.division
-      ) {
-        throw new Error("Please fill all required fields");
+      // Debug current form data
+      console.log("Form data:", {
+        ...formData,
+        cartItems: cart.length,
+      });
+
+      // Validate form fields
+      const requiredFields = {
+        "Full Name": formData.fullName?.trim(),
+        Phone: formData.phone?.trim(),
+        Location: formData.location?.trim(),
+        District: formData.district?.trim(),
+        Division: formData.division?.trim(),
+        Email: formData.email?.trim(),
+        "Cart Items": cart.length > 0,
+      };
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([_, value]) => !value)
+        .map(([name]) => name);
+
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Please fill all required fields: ${missingFields.join(", ")}`
+        );
       }
 
-      if (!/^\d+$/.test(formData.phone)) {
-        throw new Error("Phone number must contain only numbers");
-      }
-
-      if (cart.length === 0) {
-        throw new Error("Your cart is empty");
-      }
-
+      // Prepare order data
       const orderData = {
         user: userData?._id || null,
+        guestInfo: !userData
+          ? {
+              name: formData.fullName.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim(),
+            }
+          : undefined,
         products: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
@@ -118,18 +134,21 @@ const CheckoutPage = () => {
           0
         ),
         address: {
-          location: formData.location,
-          district: formData.district,
-          division: formData.division,
+          location: formData.location.trim(),
+          district: formData.district.trim(),
+          division: formData.division.trim(),
         },
-        number: Number(formData.phone),
+        number: formData.phone.trim(),
       };
 
+      // Submit order to backend
       const response = await fetch("http://localhost:8000/api/order/order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: localStorage.getItem("token")
+            ? `Bearer ${localStorage.getItem("token")}`
+            : "",
         },
         body: JSON.stringify(orderData),
       });
@@ -140,8 +159,11 @@ const CheckoutPage = () => {
       }
 
       const result = await response.json();
+
+      // Clear cart after successful order
       clearCart();
 
+      // Redirect to order confirmation page
       navigate("/order-confirmation", {
         state: {
           orderId: result.order._id,
@@ -149,17 +171,27 @@ const CheckoutPage = () => {
         },
       });
     } catch (err) {
-      setError(err.message);
-      console.error("Order submission error:", err);
+      if (isMounted) {
+        console.error("Order submission error:", err);
+        setError(err.message);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup function
+    };
+  }, []);
 
   return (
     <div className="bg-white px-4 py-13 md:px-10 lg:px-32">
       <div className="flex flex-col lg:flex-row gap-10">
-        {/* Left Section - Shipping Form */}
+        {/* LEFT - SHIPPING FORM */}
         <div className="w-full lg:w-2/3 space-y-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-900 uppercase border-b pb-2">
             Checkout
@@ -177,18 +209,9 @@ const CheckoutPage = () => {
           >
             <input
               type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
               onChange={handleInputChange}
               required
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
@@ -196,17 +219,25 @@ const CheckoutPage = () => {
             <input
               type="tel"
               name="phone"
-              placeholder="Phone Number (Numbers only)"
+              placeholder="Phone Number"
               value={formData.phone}
               onChange={handleInputChange}
               required
-              pattern="[0-9]*"
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
               type="text"
               name="location"
-              placeholder="Location (Street Address, House No)"
+              placeholder="Street Address"
               value={formData.location}
               onChange={handleInputChange}
               required
@@ -230,21 +261,30 @@ const CheckoutPage = () => {
               required
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
 
+            {/* SUBMIT BUTTON */}
             <div className="md:col-span-2 flex justify-center mt-6">
               <button
                 type="submit"
                 disabled={loading || cart.length === 0}
-                className="relative overflow-hidden w-full max-w-md bg-gradient-to-r from-green-600 to-green-800 text-white py-5 px-8 rounded-lg text-xl font-bold shadow-lg hover:from-green-700 hover:to-green-900 transition-all duration-300 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
+                className={`
+                  relative overflow-hidden
+                  w-full max-w-md
+                  bg-gradient-to-r from-green-600 to-green-800
+                  text-white 
+                  py-5 px-8 
+                  rounded-lg
+                  text-xl font-bold 
+                  shadow-lg
+                  hover:from-green-700 hover:to-green-900
+                  transition-all duration-300
+                  transform hover:scale-105
+                  ${
+                    loading || cart.length === 0
+                      ? "opacity-70 cursor-not-allowed"
+                      : ""
+                  }
+                `}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -276,13 +316,11 @@ const CheckoutPage = () => {
                     Place Order
                   </span>
                 )}
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></span>
-                </span>
               </button>
             </div>
           </form>
 
+          {/* PAYMENT */}
           <div className="flex justify-between items-start sm:items-center gap-4 border px-4 sm:px-5 py-4 sm:py-5 rounded hover:bg-green-100 text-base sm:text-xl">
             <div className="flex items-start sm:items-center gap-4">
               <div className="w-12 h-12 flex items-center justify-center rounded-full bg-white border">
@@ -307,12 +345,13 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        {/* Right Section - Order Summary */}
+        {/* RIGHT - ORDER SUMMARY */}
         <div className="w-full lg:w-1/3 space-y-8">
           <h2 className="text-4xl sm:text-4xl font-bold uppercase text-green-800 py-3">
             Order Summary
           </h2>
 
+          {/* Price Summary */}
           <div className="border border-green-800 p-4 sm:p-6 rounded shadow hover:bg-green-100 text-base sm:text-xl">
             <div className="flex justify-between mb-2">
               <span className="font-bold">Subtotal</span>
@@ -343,6 +382,7 @@ const CheckoutPage = () => {
             </div>
           </div>
 
+          {/* Bag Summary */}
           <div>
             <h3 className="font-bold my-7 text-lg sm:text-4xl text-green-800">
               Order Details
