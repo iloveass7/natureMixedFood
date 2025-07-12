@@ -1,4 +1,5 @@
 import orderModel from "../schema/orderModel.js";
+import { sendOrderEmail } from "../utils/mailer.js";
 
 const order = async (req, res) => {
   try {
@@ -23,13 +24,23 @@ const order = async (req, res) => {
       address,
       number,
     });
+
     await newOrder.save();
 
-    res
-      .status(201)
-      .json({ message: "Order placed successfully", order: newOrder });
+    sendOrderEmail(newOrder)
+      .then(() => console.log("Email sent successfully"))
+      .catch((err) => console.error("Email sending failed:", err));
+
+    res.status(201).json({
+      message: "Order placed successfully",
+      order: newOrder,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Order placement error:", error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 

@@ -16,15 +16,12 @@ const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Form fields state - maintain the previous structure
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     phone: "",
     location: "",
     district: "",
     division: "",
-    postalCode: "",
     email: "",
   });
 
@@ -46,11 +43,9 @@ const CheckoutPage = () => {
       try {
         const user = JSON.parse(storedUser);
         setUserData(user);
-        // Pre-fill form with user data (except location)
         setFormData((prev) => ({
           ...prev,
-          firstName: user.name?.split(" ")[0] || "",
-          lastName: user.name?.split(" ")[1] || "",
+          fullName: user.name || "",
           phone: user.phone || "",
           district: user.district || "",
           division: user.division || "",
@@ -90,27 +85,46 @@ const CheckoutPage = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    let isMounted = true;
 
     try {
+      // Debug current form data
+      console.log("Form data:", {
+        ...formData,
+        cartItems: cart.length,
+      });
+
       // Validate form fields
-      if (
-        !formData.firstName ||
-        !formData.lastName ||
-        !formData.phone ||
-        !formData.location ||
-        !formData.district ||
-        !formData.division
-      ) {
-        throw new Error("Please fill all required fields");
+      const requiredFields = {
+        "Full Name": formData.fullName?.trim(),
+        Phone: formData.phone?.trim(),
+        Location: formData.location?.trim(),
+        District: formData.district?.trim(),
+        Division: formData.division?.trim(),
+        Email: formData.email?.trim(),
+        "Cart Items": cart.length > 0,
+      };
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([_, value]) => !value)
+        .map(([name]) => name);
+
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Please fill all required fields: ${missingFields.join(", ")}`
+        );
       }
 
-      if (cart.length === 0) {
-        throw new Error("Your cart is empty");
-      }
-
-      // Prepare order data according to your backend schema
+      // Prepare order data
       const orderData = {
-        user: userData?._id || null, // Include user ID if logged in
+        user: userData?._id || null,
+        guestInfo: !userData
+          ? {
+              name: formData.fullName.trim(),
+              email: formData.email.trim(),
+              phone: formData.phone.trim(),
+            }
+          : undefined,
         products: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
@@ -120,12 +134,11 @@ const CheckoutPage = () => {
           0
         ),
         address: {
-          location: formData.location,
-          district: formData.district,
-          division: formData.division,
+          location: formData.location.trim(),
+          district: formData.district.trim(),
+          division: formData.division.trim(),
         },
-        number: formData.phone,
-        // Status will be set to "Processing" by default in backend
+        number: formData.phone.trim(),
       };
 
       // Submit order to backend
@@ -133,7 +146,9 @@ const CheckoutPage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Include if using auth
+          Authorization: localStorage.getItem("token")
+            ? `Bearer ${localStorage.getItem("token")}`
+            : "",
         },
         body: JSON.stringify(orderData),
       });
@@ -156,19 +171,28 @@ const CheckoutPage = () => {
         },
       });
     } catch (err) {
-      setError(err.message);
-      console.error("Order submission error:", err);
+      if (isMounted) {
+        console.error("Order submission error:", err);
+        setError(err.message);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup function
+    };
+  }, []);
 
   return (
     <div className="bg-white px-4 py-13 md:px-10 lg:px-32">
       <div className="flex flex-col lg:flex-row gap-10">
         {/* LEFT - SHIPPING FORM */}
         <div className="w-full lg:w-2/3 space-y-10">
-          {/* CHECKOUT HEADER */}
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-900 uppercase border-b pb-2">
             Checkout
           </h2>
@@ -179,25 +203,15 @@ const CheckoutPage = () => {
             </div>
           )}
 
-          {/* FORM - Maintained the previous structure */}
           <form
             onSubmit={handleSubmitOrder}
             className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base sm:text-lg md:text-xl"
           >
             <input
               type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
               onChange={handleInputChange}
               required
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
@@ -209,12 +223,21 @@ const CheckoutPage = () => {
               value={formData.phone}
               onChange={handleInputChange}
               required
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
               type="text"
               name="location"
-              placeholder="Location (Street Address, House No)"
+              placeholder="Street Address"
               value={formData.location}
               onChange={handleInputChange}
               required
@@ -238,45 +261,30 @@ const CheckoutPage = () => {
               required
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
-            <input
-              type="text"
-              name="postalCode"
-              placeholder="Postal Code"
-              value={formData.postalCode}
-              onChange={handleInputChange}
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
 
-            {/* CONTINUE BUTTON - Now submits the order */}
-            {/* Inside your CheckoutPage component, replace the current button with this: */}
-
+            {/* SUBMIT BUTTON */}
             <div className="md:col-span-2 flex justify-center mt-6">
               <button
                 type="submit"
                 disabled={loading || cart.length === 0}
                 className={`
-      relative overflow-hidden
-      w-full max-w-md
-      bg-gradient-to-r from-green-600 to-green-800
-      text-white 
-      py-5 px-8 
-      rounded-lg
-      text-xl font-bold 
-      shadow-lg
-      hover:from-green-700 hover:to-green-900
-      transition-all duration-300
-      transform hover:scale-105
-      ${loading || cart.length === 0 ? "opacity-70 cursor-not-allowed" : ""}
-    `}
+                  relative overflow-hidden
+                  w-full max-w-md
+                  bg-gradient-to-r from-green-600 to-green-800
+                  text-white 
+                  py-5 px-8 
+                  rounded-lg
+                  text-xl font-bold 
+                  shadow-lg
+                  hover:from-green-700 hover:to-green-900
+                  transition-all duration-300
+                  transform hover:scale-105
+                  ${
+                    loading || cart.length === 0
+                      ? "opacity-70 cursor-not-allowed"
+                      : ""
+                  }
+                `}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -308,9 +316,6 @@ const CheckoutPage = () => {
                     Place Order
                   </span>
                 )}
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></span>
-                </span>
               </button>
             </div>
           </form>
