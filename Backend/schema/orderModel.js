@@ -9,13 +9,19 @@ const orderSchema = new mongoose.Schema({
     },
   ],
   totalPrice: { type: Number, required: true },
-  address: { type: String, required: true },
+  address: {
+    location: { type: String, required: true },
+    district: { type: String, required: true },
+    division: { type: String, required: true },
+  },
   number: { type: Number, required: true },
-  status: { type: Boolean, default: false },
+  status: {
+    type: String,
+    enum: ["Processing", "Out for Delivery", "Delivered"],
+    default: "Processing",
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
-const orderModel =
-  mongoose.models.order || mongoose.model("order", orderSchema);
-
+const orderModel = mongoose.modeorder || mongoose.model("order", orderSchema);
 export default orderModel;

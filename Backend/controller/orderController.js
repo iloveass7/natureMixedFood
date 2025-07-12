@@ -4,7 +4,15 @@ const order = async (req, res) => {
   try {
     const { user, products, totalPrice, address, number } = req.body;
 
-    if (!user || !products.length || !totalPrice || !address) {
+    if (
+      !user ||
+      !products.length ||
+      !totalPrice ||
+      !address?.location ||
+      !address?.district ||
+      !address?.division ||
+      !number
+    ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -28,45 +36,43 @@ const order = async (req, res) => {
 const getOrders = async (req, res) => {
   try {
     const orders = await orderModel
-      .find({ status: false })
+      .find({})
       .populate("user")
       .sort({ createdAt: -1 });
 
-    if (!orders.length) {
-      return res.status(404).json({ message: "No unapproved orders found" });
-    }
-
     res.status(200).json(orders);
   } catch (err) {
-    console.error("Error fetching unapproved orders:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-const approveOrder = async (req, res) => {
+const updateOrderStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
   try {
+    if (!["Processing", "Out for Delivery", "Delivered"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    if (status === "Delivered") {
+      const deleted = await orderModel.findByIdAndDelete(id);
+      if (!deleted) return res.status(404).json({ message: "Order not found" });
+
+      return res.status(200).json({ message: "Order delivered and deleted" });
+    }
+
     const order = await orderModel.findByIdAndUpdate(
-      req.params.id,
-      { status: true },
+      id,
+      { status },
       { new: true }
     );
-
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    res.status(200).json({ message: "Order approved successfully", order });
+    res.status(200).json({ message: "Order status updated", order });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
 };
 
-const getApproveOrder = async (req, res) => {
-  try {
-    const approvedOrders = await orderModel.find({ status: true });
-
-    res.status(200).json(approvedOrders);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
-  }
-};
-
-export { order, getOrders, approveOrder, getApproveOrder };
+export { order, getOrders, updateOrderStatus };
