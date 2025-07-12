@@ -16,7 +16,6 @@ const CheckoutPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Form fields state - maintain the previous structure
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -24,7 +23,6 @@ const CheckoutPage = () => {
     location: "",
     district: "",
     division: "",
-    postalCode: "",
     email: "",
   });
 
@@ -38,7 +36,6 @@ const CheckoutPage = () => {
       setCart(buyNowCart.length > 0 ? buyNowCart : getLocalCart());
     }
 
-    // Check if user is logged in
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("userData");
 
@@ -46,7 +43,6 @@ const CheckoutPage = () => {
       try {
         const user = JSON.parse(storedUser);
         setUserData(user);
-        // Pre-fill form with user data (except location)
         setFormData((prev) => ({
           ...prev,
           firstName: user.name?.split(" ")[0] || "",
@@ -92,7 +88,6 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
-      // Validate form fields
       if (
         !formData.firstName ||
         !formData.lastName ||
@@ -104,13 +99,16 @@ const CheckoutPage = () => {
         throw new Error("Please fill all required fields");
       }
 
+      if (!/^\d+$/.test(formData.phone)) {
+        throw new Error("Phone number must contain only numbers");
+      }
+
       if (cart.length === 0) {
         throw new Error("Your cart is empty");
       }
 
-      // Prepare order data according to your backend schema
       const orderData = {
-        user: userData?._id || null, // Include user ID if logged in
+        user: userData?._id || null,
         products: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
@@ -124,16 +122,14 @@ const CheckoutPage = () => {
           district: formData.district,
           division: formData.division,
         },
-        number: formData.phone,
-        // Status will be set to "Processing" by default in backend
+        number: Number(formData.phone),
       };
 
-      // Submit order to backend
       const response = await fetch("http://localhost:8000/api/order/order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Include if using auth
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify(orderData),
       });
@@ -144,11 +140,8 @@ const CheckoutPage = () => {
       }
 
       const result = await response.json();
-
-      // Clear cart after successful order
       clearCart();
 
-      // Redirect to order confirmation page
       navigate("/order-confirmation", {
         state: {
           orderId: result.order._id,
@@ -166,9 +159,8 @@ const CheckoutPage = () => {
   return (
     <div className="bg-white px-4 py-13 md:px-10 lg:px-32">
       <div className="flex flex-col lg:flex-row gap-10">
-        {/* LEFT - SHIPPING FORM */}
+        {/* Left Section - Shipping Form */}
         <div className="w-full lg:w-2/3 space-y-10">
-          {/* CHECKOUT HEADER */}
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-green-900 uppercase border-b pb-2">
             Checkout
           </h2>
@@ -179,7 +171,6 @@ const CheckoutPage = () => {
             </div>
           )}
 
-          {/* FORM - Maintained the previous structure */}
           <form
             onSubmit={handleSubmitOrder}
             className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base sm:text-lg md:text-xl"
@@ -205,10 +196,11 @@ const CheckoutPage = () => {
             <input
               type="tel"
               name="phone"
-              placeholder="Phone Number"
+              placeholder="Phone Number (Numbers only)"
               value={formData.phone}
               onChange={handleInputChange}
               required
+              pattern="[0-9]*"
               className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
@@ -239,14 +231,6 @@ const CheckoutPage = () => {
               className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
             <input
-              type="text"
-              name="postalCode"
-              placeholder="Postal Code"
-              value={formData.postalCode}
-              onChange={handleInputChange}
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
               type="email"
               name="email"
               placeholder="Email Address"
@@ -256,27 +240,11 @@ const CheckoutPage = () => {
               className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
             />
 
-            {/* CONTINUE BUTTON - Now submits the order */}
-            {/* Inside your CheckoutPage component, replace the current button with this: */}
-
             <div className="md:col-span-2 flex justify-center mt-6">
               <button
                 type="submit"
                 disabled={loading || cart.length === 0}
-                className={`
-      relative overflow-hidden
-      w-full max-w-md
-      bg-gradient-to-r from-green-600 to-green-800
-      text-white 
-      py-5 px-8 
-      rounded-lg
-      text-xl font-bold 
-      shadow-lg
-      hover:from-green-700 hover:to-green-900
-      transition-all duration-300
-      transform hover:scale-105
-      ${loading || cart.length === 0 ? "opacity-70 cursor-not-allowed" : ""}
-    `}
+                className="relative overflow-hidden w-full max-w-md bg-gradient-to-r from-green-600 to-green-800 text-white py-5 px-8 rounded-lg text-xl font-bold shadow-lg hover:from-green-700 hover:to-green-900 transition-all duration-300 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -315,7 +283,6 @@ const CheckoutPage = () => {
             </div>
           </form>
 
-          {/* PAYMENT */}
           <div className="flex justify-between items-start sm:items-center gap-4 border px-4 sm:px-5 py-4 sm:py-5 rounded hover:bg-green-100 text-base sm:text-xl">
             <div className="flex items-start sm:items-center gap-4">
               <div className="w-12 h-12 flex items-center justify-center rounded-full bg-white border">
@@ -340,13 +307,12 @@ const CheckoutPage = () => {
           </div>
         </div>
 
-        {/* RIGHT - ORDER SUMMARY */}
+        {/* Right Section - Order Summary */}
         <div className="w-full lg:w-1/3 space-y-8">
           <h2 className="text-4xl sm:text-4xl font-bold uppercase text-green-800 py-3">
             Order Summary
           </h2>
 
-          {/* Price Summary */}
           <div className="border border-green-800 p-4 sm:p-6 rounded shadow hover:bg-green-100 text-base sm:text-xl">
             <div className="flex justify-between mb-2">
               <span className="font-bold">Subtotal</span>
@@ -377,7 +343,6 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          {/* Bag Summary */}
           <div>
             <h3 className="font-bold my-7 text-lg sm:text-4xl text-green-800">
               Order Details
