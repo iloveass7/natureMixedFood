@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingCart, LogOut } from 'lucide-react';
 import Cart from '../pages/Cart';
 import SearchSidebar from './SearchSidebar';
-import { getLocalCart } from '../utils/cart.jsx';
+import { getLocalCart, clearCart } from '../utils/cart.jsx';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,8 +20,12 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     localStorage.removeItem('adminToken');
+
+    clearCart();
+
     navigate('/login');
     window.location.reload();
   };
