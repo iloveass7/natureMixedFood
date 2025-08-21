@@ -106,7 +106,7 @@ const OrderList = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-2">
       <h3 className="text-4xl font-extrabold mb-9 text-green-800">
         Order Lists and Details
       </h3>
@@ -120,8 +120,14 @@ const OrderList = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h4 className="text-2xl font-semibold mb-1">
-                  {order?.user?.name || `Order #${order._id.slice(-6)}`}
+                  {/* Show guest name if no user, otherwise show user name */}
+                  {order.user 
+                    ? order.user.name 
+                    : order.guestInfo?.name || `Guest Order`}
                 </h4>
+                <p className="text-gray-400 my-1 text-lg font-semibold">
+                  Order ID: {order._id}
+                </p>
                 <p className="text-gray-600 my-1">
                   {new Date(order.createdAt).toLocaleString()}
                 </p>
@@ -181,7 +187,7 @@ const OrderList = () => {
                                     className="w-12 h-12 sm:w-20 sm:h-20 object-cover rounded mr-2 sm:mr-4"
                                   />
                                 )}
-                                <div className="min-w-0"> {/* Added min-w-0 to enable text truncation */}
+                                <div className="min-w-0">
                                   <div className="text-sm sm:text-[1.2rem] font-medium text-gray-900 truncate">
                                     {productItem.product?.name || "Unknown Product"}
                                   </div>
@@ -194,7 +200,7 @@ const OrderList = () => {
                             <td className="px-2 py-3 sm:px-5 sm:py-4 whitespace-nowrap text-sm sm:text-lg font-bold text-gray-500">
                               ${productItem.product?.price?.toFixed(2) || "0.00"}
                             </td>
-                            <td className="px-2 py-3 sm:px-4 sm:py-4 whitespace-nowrap text-sm sm:text-lg text-gray-500">
+                            <td className="px-2 py-3 sm:px-9 sm:py-4 whitespace-nowrap text-sm sm:text-lg text-gray-500">
                               {productItem.quantity}
                             </td>
                             <td className="px-2 py-3 sm:px-4 sm:py-4 whitespace-nowrap text-sm sm:text-lg text-gray-500 font-bold">
@@ -217,6 +223,16 @@ const OrderList = () => {
                     </h5>
                     <div className="space-y-2">
                       <p>
+                        <span className="font-semibold text-[1.1rem]">Customer:</span>{" "}
+                        {order.user 
+                          ? order.user.name 
+                          : order.guestInfo?.name || 'Guest'}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-[1.1rem]">Contact:</span>{" "}
+                        {order.number}
+                      </p>
+                      <p>
                         <span className="font-semibold text-[1.1rem]">Location:</span>{" "}
                         {order.address?.location}
                       </p>
@@ -227,10 +243,6 @@ const OrderList = () => {
                       <p>
                         <span className="font-semibold text-[1.1rem]">Division:</span>{" "}
                         {order.address?.division}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-[1.1rem]">Contact:</span>{" "}
-                        {order.number}
                       </p>
                     </div>
                   </div>
@@ -255,9 +267,6 @@ const OrderList = () => {
                         ))}
                       </select>
                     </div>
-                    {/* <p className="text-right text-[1.2rem] mt-10 text-green-700 font-medium ">
-                      Total: ${order.totalPrice.toFixed(2)}
-                    </p> */}
                   </div>
                 </div>
               </div>

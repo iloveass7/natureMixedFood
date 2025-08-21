@@ -78,7 +78,7 @@ const Navbar = () => {
           <ul className="hidden md:flex flex-10 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] lg:text-[1.5rem]">
             <li><Link to="/" className="hover:text-yellow-500">Home</Link></li>
             <li><Link to="/blogs" className="hover:text-yellow-500">Blogs</Link></li>
-            <li><Link to="/about" className="hover:text-yellow-500">About</Link></li>
+            <li><Link to="/about-us" className="hover:text-yellow-500">About</Link></li>
             <li>
               {isAdminLoggedIn ? (
                 <Link to="/admin" className="hover:text-yellow-500">Admin Profile</Link>

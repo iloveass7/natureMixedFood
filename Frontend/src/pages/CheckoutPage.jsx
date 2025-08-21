@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Wallet, Plus, Minus } from "lucide-react";
+import { Wallet, Plus, Minus, CheckCircle, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   getCart,
@@ -13,6 +13,8 @@ const CheckoutPage = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [orderConfirmation, setOrderConfirmation] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -26,8 +28,24 @@ const CheckoutPage = () => {
   });
 
   useEffect(() => {
-    const fromCart = location.state?.fromCart || false;
+    // Check for pending order after reload
+    const pendingOrder = localStorage.getItem('pendingOrder');
+    if (pendingOrder) {
+      const orderData = JSON.parse(pendingOrder);
+      setOrderConfirmation(orderData);
+      setShowConfirmation(true);
+      localStorage.removeItem('pendingOrder');
 
+      // Set 1min timeout for auto-redirect
+      const redirectTimer = setTimeout(() => {
+        navigate("/");
+      }, 60000);
+
+      return () => clearTimeout(redirectTimer);
+    }
+
+    // Original cart loading logic
+    const fromCart = location.state?.fromCart || false;
     if (fromCart) {
       setCart(getLocalCart());
     } else {
@@ -35,7 +53,7 @@ const CheckoutPage = () => {
       setCart(buyNowCart.length > 0 ? buyNowCart : getLocalCart());
     }
 
-    // Check if user is logged in
+    // Original user data loading
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("userData");
 
@@ -55,7 +73,7 @@ const CheckoutPage = () => {
         console.error("Error parsing user data:", error);
       }
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   const removeFromCart = (productId) => {
     const updatedCart = cart.filter((item) => item._id !== productId);
@@ -65,7 +83,6 @@ const CheckoutPage = () => {
 
   const updateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) return;
-
     const updatedCart = cart.map((item) =>
       item._id === productId ? { ...item, quantity: newQuantity } : item
     );
@@ -81,20 +98,18 @@ const CheckoutPage = () => {
     }));
   };
 
+  const closeConfirmation = () => {
+    setShowConfirmation(false);
+    navigate("/");
+  };
+
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    let isMounted = true;
 
     try {
-      // Debug current form data
-      console.log("Form data:", {
-        ...formData,
-        cartItems: cart.length,
-      });
-
-      // Validate form fields
+      // Original validation logic
       const requiredFields = {
         "Full Name": formData.fullName?.trim(),
         Phone: formData.phone?.trim(),
@@ -115,10 +130,9 @@ const CheckoutPage = () => {
         );
       }
 
-      // Prepare order data
-      // In your handleSubmitOrder function:
+      // Original order data preparation
       const orderData = {
-        user: userData?._id || null, // This can be null for guests
+        user: userData?._id || null,
         guestInfo: !userData
           ? {
               name: formData.fullName.trim(),
@@ -142,7 +156,7 @@ const CheckoutPage = () => {
         number: formData.phone.trim(),
       };
 
-      // Submit order to backend
+      // Original order submission
       const response = await fetch("http://localhost:8000/api/order/order", {
         method: "POST",
         headers: {
@@ -160,37 +174,51 @@ const CheckoutPage = () => {
       }
 
       const result = await response.json();
-
-      // Clear cart after successful order
       clearCart();
 
-      // Redirect to order confirmation page
-      navigate("/order-confirmation", {
-        state: {
-          orderId: result.order._id,
-          orderDetails: result.order,
-        },
-      });
+      // New reload and modal logic
+      localStorage.setItem('pendingOrder', JSON.stringify({
+        orderId: result.order._id,
+        orderDetails: result.order,
+      }));
+      window.location.reload();
+
     } catch (err) {
-      if (isMounted) {
-        console.error("Order submission error:", err);
-        setError(err.message);
-      }
-    } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
+      console.error("Order submission error:", err);
+      setError(err.message);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      // Cleanup function
-    };
-  }, []);
-
   return (
-    <div className="bg-white px-4 py-13 md:px-10 lg:px-32">
+    <div className="bg-white px-4 py-13 md:px-10 lg:px-32 relative">
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-2xl h-auto w-full text-center border-2 border-green-600">
+            <button
+              onClick={closeConfirmation}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+            <CheckCircle className="mx-auto text-green-500" size={48} />
+            <h1 className="text-2xl font-bold mt-4">Order Placed Successfully!</h1>
+            <p className="mt-2">Your order ID: {orderConfirmation?.orderId}</p>
+            <p className="mt-4">
+              Thank you for your purchase. We'll process your order shortly.
+            </p>
+            <button
+              onClick={closeConfirmation}
+              className="mt-6 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Original JSX remains unchanged below */}
       <div className="flex flex-col lg:flex-row gap-10">
         {/* LEFT - SHIPPING FORM */}
         <div className="w-full lg:w-2/3 space-y-10">
@@ -206,65 +234,88 @@ const CheckoutPage = () => {
 
           <form
             onSubmit={handleSubmitOrder}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base sm:text-lg md:text-xl"
+            className="space-y-4 text-base sm:text-lg md:text-xl"
           >
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Full Name"
-              value={formData.fullName}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="text"
-              name="location"
-              placeholder="Street Address"
-              value={formData.location}
-              onChange={handleInputChange}
-              required
-              className="md:col-span-2 border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="text"
-              name="district"
-              placeholder="District"
-              value={formData.district}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
-            <input
-              type="text"
-              name="division"
-              placeholder="Division"
-              value={formData.division}
-              onChange={handleInputChange}
-              required
-              className="border border-green-800 px-4 py-4 rounded hover:bg-green-100"
-            />
+            {/* Full Name - Full width row */}
+            <div>
+              <input
+                type="text"
+                name="fullName"
+                placeholder="Full Name"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              />
+            </div>
+
+            {/* Phone Number - Full width row */}
+            <div>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Phone Number"
+                value={formData.phone}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              />
+            </div>
+
+            {/* Email - Full width row */}
+            <div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email Address"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              />
+            </div>
+
+            {/* Street Address - Full width row */}
+            <div>
+              <input
+                type="text"
+                name="location"
+                placeholder="Street Address"
+                value={formData.location}
+                onChange={handleInputChange}
+                required
+                className="w-full border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+              />
+            </div>
+
+            {/* District and Division - Side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <input
+                  type="text"
+                  name="district"
+                  placeholder="District"
+                  value={formData.district}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  name="division"
+                  placeholder="Division"
+                  value={formData.division}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full border border-green-800 px-4 py-4 rounded hover:bg-green-100"
+                />
+              </div>
+            </div>
 
             {/* SUBMIT BUTTON */}
-            <div className="md:col-span-2 flex justify-center mt-6">
+            <div className="flex justify-center pt-6">
               <button
                 type="submit"
                 disabled={loading || cart.length === 0}
