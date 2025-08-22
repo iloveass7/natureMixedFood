@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HeroSection from "./HeroSection";
 import ProductsSection from "./ProductsSection";
 import InfoCardsSection from "./InfoCardsSection";
+import { api } from "../../config/api";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -15,8 +16,7 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/product/getAllProducts");
-        const data = await response.json();
+        const { data } = await api.get("/product/getAllProducts");
         setProducts(data);
       } catch (error) {
         console.error("Error fetching products:", error);

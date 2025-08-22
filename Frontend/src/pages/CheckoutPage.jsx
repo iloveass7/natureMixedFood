@@ -7,6 +7,7 @@ import {
   saveLocalCart,
   clearCart,
 } from "../utils/cart.jsx";
+import { api } from "../config/api";
 
 const CheckoutPage = () => {
   const [cart, setCart] = useState([]);
@@ -109,8 +110,8 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
-      // Original validation logic
-      const requiredFields = {
+      // Validate required fields
+      const required = {
         "Full Name": formData.fullName?.trim(),
         Phone: formData.phone?.trim(),
         Location: formData.location?.trim(),
@@ -120,34 +121,29 @@ const CheckoutPage = () => {
         "Cart Items": cart.length > 0,
       };
 
-      const missingFields = Object.entries(requiredFields)
-        .filter(([_, value]) => !value)
-        .map(([name]) => name);
+      const missing = Object.entries(required)
+        .filter(([_, v]) => !v)
+        .map(([k]) => k);
 
-      if (missingFields.length > 0) {
-        throw new Error(
-          `Please fill all required fields: ${missingFields.join(", ")}`
-        );
+      if (missing.length) {
+        throw new Error(`Please fill all required fields: ${missing.join(", ")}`);
       }
 
-      // Original order data preparation
+      // Build payload
       const orderData = {
         user: userData?._id || null,
         guestInfo: !userData
           ? {
-              name: formData.fullName.trim(),
-              email: formData.email.trim(),
-              phone: formData.phone.trim(),
-            }
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+          }
           : undefined,
         products: cart.map((item) => ({
           product: item._id,
           quantity: item.quantity,
         })),
-        totalPrice: cart.reduce(
-          (acc, item) => acc + item.price * item.quantity,
-          0
-        ),
+        totalPrice: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
         address: {
           location: formData.location.trim(),
           district: formData.district.trim(),
@@ -156,36 +152,34 @@ const CheckoutPage = () => {
         number: formData.phone.trim(),
       };
 
-      // Original order submission
-      const response = await fetch("http://localhost:8000/api/order/order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: localStorage.getItem("token")
-            ? `Bearer ${localStorage.getItem("token")}`
-            : "",
-        },
-        body: JSON.stringify(orderData),
-      });
+      // Submit via axios instance (Authorization header is added by your interceptor if a token exists)
+      const { data, status } = await api.post("/order/order", orderData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to place order");
+      const ok =
+        status >= 200 &&
+        status < 300 &&
+        // accept either { success: true } or { order: {...} }
+        ((typeof data?.success === "boolean" ? data.success : true) || !!data?.order);
+
+      if (!ok) {
+        throw new Error(data?.message || "Failed to place order");
       }
 
-      const result = await response.json();
       clearCart();
 
-      // New reload and modal logic
-      localStorage.setItem('pendingOrder', JSON.stringify({
-        orderId: result.order._id,
-        orderDetails: result.order,
-      }));
-      window.location.reload();
+      // Persist for post-reload confirmation flow
+      localStorage.setItem(
+        "pendingOrder",
+        JSON.stringify({
+          orderId: data?.order?._id,
+          orderDetails: data?.order,
+        })
+      );
 
+      window.location.reload();
     } catch (err) {
       console.error("Order submission error:", err);
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || "Failed to place order");
       setLoading(false);
     }
   };
@@ -331,10 +325,9 @@ const CheckoutPage = () => {
                   hover:from-green-700 hover:to-green-900
                   transition-all duration-300
                   transform hover:scale-105
-                  ${
-                    loading || cart.length === 0
-                      ? "opacity-70 cursor-not-allowed"
-                      : ""
+                  ${loading || cart.length === 0
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
                   }
                 `}
               >
@@ -464,11 +457,10 @@ const CheckoutPage = () => {
                             onClick={() =>
                               updateQuantity(item._id, item.quantity - 1)
                             }
-                            className={`w-6 h-6 ${
-                              item.quantity <= 1
+                            className={`w-6 h-6 ${item.quantity <= 1
                                 ? "bg-gray-200"
                                 : "bg-gray-100 hover:bg-amber-400"
-                            } rounded-md flex items-center justify-center transition`}
+                              } rounded-md flex items-center justify-center transition`}
                             disabled={item.quantity <= 1}
                           >
                             <Minus className="text-gray-700" size={14} />

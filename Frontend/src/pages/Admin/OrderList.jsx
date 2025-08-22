@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Loader from "../../components/Loader";
+import { api } from "../../config/api";
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
@@ -9,52 +10,49 @@ const OrderList = () => {
 
   const token = localStorage.getItem("token");
 
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:8000/api/order/getOrders", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const { data: raw } = await api.get("/order/getOrders");
+      const orders = Array.isArray(raw) ? raw : raw?.orders || [];
 
-      const data = await res.json();
-      if (res.ok) {
-        // Fetch product details for each order
-        const ordersWithProducts = await Promise.all(
-          data.map(async (order) => {
-            const productsWithDetails = await Promise.all(
-              order.products.map(async (productItem) => {
-                const productRes = await fetch(
-                  `http://localhost:8000/api/product/singleProduct/${productItem.product}`
+      // Hydrate product details for each order
+      const ordersWithProducts = await Promise.all(
+        orders.map(async (order) => {
+          const productsWithDetails = await Promise.all(
+            order.products.map(async (item) => {
+              try {
+                const { data: product } = await api.get(
+                  `/product/singleProduct/${item.product}`
                 );
-                const productData = await productRes.json();
-                return {
-                  ...productItem,
-                  product: productData || { name: "Unknown Product" },
-                };
-              })
-            );
-            return {
-              ...order,
-              products: productsWithDetails,
-            };
-          })
-        );
+                return { ...item, product: product || { name: "Unknown Product" } };
+              } catch (e) {
+                console.error("Product fetch failed:", item.product, e);
+                return { ...item, product: { name: "Unknown Product" } };
+              }
+            })
+          );
+          return { ...order, products: productsWithDetails };
+        })
+      );
 
-        setOrders(ordersWithProducts);
-        const statuses = {};
-        ordersWithProducts.forEach((order) => (statuses[order._id] = order.status));
-        setOrderStatus(statuses);
-      } else {
-        alert(data.message || "Failed to fetch orders");
-      }
+      setOrders(ordersWithProducts);
+
+      // Build status map
+      const statuses = ordersWithProducts.reduce((acc, o) => {
+        acc[o._id] = o.status;
+        return acc;
+      }, {});
+      setOrderStatus(statuses);
     } catch (err) {
       console.error("Error fetching orders:", err);
+      alert(err.response?.data?.message || "Failed to fetch orders");
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchOrders();
@@ -67,37 +65,29 @@ const OrderList = () => {
   const statusOptions = ["Processing", "Out for Delivery", "Delivered"];
 
   const handleStatusChange = async (id, newStatus) => {
-    const confirmChange =
+    const proceed =
       newStatus === "Delivered"
         ? window.confirm("Mark as Delivered? This will delete the order.")
         : true;
 
-    if (!confirmChange) return;
+    if (!proceed) return;
 
     try {
-      const res = await fetch(
-        `http://localhost:8000/api/order/updateOrderStatus/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
+      const { data, status } = await api.put(
+        `/order/updateOrderStatus/${id}`,
+        { status: newStatus }
+        // No need to pass headers; your api interceptor adds Authorization
       );
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to update order");
-        return;
+      if (!(status >= 200 && status < 300)) {
+        throw new Error(data?.message || "Failed to update order");
       }
 
-      alert(data.message);
-      fetchOrders();
-    } catch (error) {
-      console.error("Error updating order status:", error);
+      alert(data?.message || "Order updated");
+      await fetchOrders(); // refresh list
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      alert(err.response?.data?.message || err.message || "Failed to update order");
     }
   };
 
@@ -121,8 +111,8 @@ const OrderList = () => {
               <div>
                 <h4 className="text-2xl font-semibold mb-1">
                   {/* Show guest name if no user, otherwise show user name */}
-                  {order.user 
-                    ? order.user.name 
+                  {order.user
+                    ? order.user.name
                     : order.guestInfo?.name || `Guest Order`}
                 </h4>
                 <p className="text-gray-400 my-1 text-lg font-semibold">
@@ -135,8 +125,8 @@ const OrderList = () => {
                   Total: ${order.totalPrice.toFixed(2)}
                 </p>
                 <p className={`text-lg font-semibold ${order.status === "Processing" ? "text-amber-600" :
-                    order.status === "Out for Delivery" ? "text-pink-500" :
-                      "text-green-600"
+                  order.status === "Out for Delivery" ? "text-pink-500" :
+                    "text-green-600"
                   }`}>
                   Status: {order.status}
                 </p>
@@ -224,8 +214,8 @@ const OrderList = () => {
                     <div className="space-y-2">
                       <p>
                         <span className="font-semibold text-[1.1rem]">Customer:</span>{" "}
-                        {order.user 
-                          ? order.user.name 
+                        {order.user
+                          ? order.user.name
                           : order.guestInfo?.name || 'Guest'}
                       </p>
                       <p>

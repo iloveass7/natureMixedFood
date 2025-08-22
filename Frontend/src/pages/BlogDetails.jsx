@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Calendar, Clock, User } from "lucide-react";
 import Loader from "../components/Loader";
+import { api } from "../config/api";  
 
 const BlogDetails = () => {
   const [blog, setBlog] = useState(null);
@@ -13,11 +14,12 @@ const BlogDetails = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/blog/getSingleBlog/${id}`
+        const { data } = await api.get(
+          `/blog/getSingleBlog/${id}`
         );
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
+        // if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        // const data = await response.json();
+        
         setBlog(data);
         setError(null);
       } catch (err) {

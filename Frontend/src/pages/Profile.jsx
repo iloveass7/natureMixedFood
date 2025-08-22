@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
-const API =
-  import.meta?.env?.VITE_API_URL?.replace(/\/$/, "") ||
-  "http://localhost:8000";
+import { api } from "../config/api";
 
 // robust token getter (handles token vs authToken and bad string values)
 function getToken() {
@@ -43,10 +40,7 @@ const Profile = () => {
         setUser(null);
         return;
       }
-
-      // NOTE: if your server mounts user routes at /api/user, use that path.
-      // If you truly have /api/profile, change below accordingly.
-      const { data } = await axios.get(`${API}/api/user/profile`, {
+      const { data } = await api.get("/user/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -109,7 +103,7 @@ const Profile = () => {
       }
 
       // Adjust path if your backend route differs
-      const { data } = await axios.put(`${API}/api/user/edit`, formData, {
+      const { data } = await api.put("/user/edit", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

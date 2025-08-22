@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { api } from "../../config/api";
 
 const EditProduct = () => {
   const [products, setProducts] = useState([]);
@@ -10,12 +11,25 @@ const EditProduct = () => {
     bestSeller: false,
     images: [],
   });
+
   const [showAllProducts, setShowAllProducts] = useState(false);
 
+  // Loading states
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+
   const fetchProducts = async () => {
-    const res = await fetch("http://localhost:8000/api/product/getAllProducts");
-    const data = await res.json();
-    setProducts(data);
+    try {
+      const { data, status } = await api.get("/product/getAllProducts");
+      if (status >= 200 && status < 300) {
+        setProducts(data);
+      } else {
+        throw new Error("Failed to load products");
+      }
+    } catch (err) {
+      console.error("Fetch products error:", err);
+      alert(err.response?.data?.message || err.message || "Failed to load products");
+    }
   };
 
   useEffect(() => {
@@ -28,74 +42,96 @@ const EditProduct = () => {
     } else {
       setEditingProduct(product._id);
       setFormData({
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        bestSeller: product.bestSeller,
-        images: [],
+        name: product.name || "",
+        description: product.description || "",
+        price: product.price ?? "",
+        bestSeller: !!product.bestSeller,
+        images: [], // start empty; only upload if user picks any
       });
     }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
-    const res = await fetch(`http://localhost:8000/api/product/removeProduct/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-      },
-    });
-    const data = await res.json();
-    if (res.ok) {
-      alert("Deleted!");
-      fetchProducts();
-    } else {
-      alert(data.message || "Error deleting");
+
+    try {
+      setDeleteLoadingId(id);
+      const res = await api.delete(`/product/removeProduct/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`,
+        },
+      });
+
+      const ok = res.status >= 200 && res.status < 300 && (res.data?.success ?? true);
+      if (ok) {
+        alert("Deleted!");
+        await fetchProducts();
+      } else {
+        throw new Error(res.data?.message || "Error deleting");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert(err.response?.data?.message || err.message || "Error deleting");
+    } finally {
+      setDeleteLoadingId(null);
     }
   };
 
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
-    const updateData = new FormData();
-    updateData.append("name", formData.name);
-    updateData.append("description", formData.description);
-    updateData.append("price", formData.price);
-    updateData.append("bestSeller", formData.bestSeller);
 
-    formData.images.forEach((file, idx) => {
-      if (idx < 5) updateData.append(`image${idx + 1}`, file);
-    });
+    try {
+      setSaveLoading(true);
 
-    const res = await fetch(
-      `http://localhost:8000/api/product/updateProduct/${editingProduct}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
-        },
-        body: updateData,
+      const updateData = new FormData();
+      updateData.append("name", formData.name);
+      updateData.append("description", formData.description);
+      updateData.append("price", formData.price);
+      // FormData values are strings; serialize boolean
+      updateData.append("bestSeller", formData.bestSeller ? "true" : "false");
+
+      // Append up to 5 images if user selected any
+      formData.images.forEach((file, idx) => {
+        if (idx < 5) updateData.append(`image${idx + 1}`, file);
+      });
+
+      const { data, status } = await api.put(
+        `/product/updateProduct/${editingProduct}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("adminToken") || ""}`,
+            // Don't set Content-Type; axios handles it for FormData
+          },
+        }
+      );
+
+      if (status === 200 && (data?.success ?? true)) {
+        alert("Product updated!");
+        setEditingProduct(null);
+        await fetchProducts();
+      } else {
+        throw new Error(data?.message || "Update failed");
       }
-    );
-
-    const data = await res.json();
-    if (res.ok) {
-      alert("Product updated");
-      setEditingProduct(null);
-      fetchProducts();
-    } else {
-      alert(data.message || "Update failed");
+    } catch (error) {
+      console.error("Update error:", error);
+      alert(error.response?.data?.message || error.message || "Update failed");
+    } finally {
+      setSaveLoading(false);
     }
   };
 
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     setFormData((prev) => ({ ...prev, images: [...prev.images, ...files] }));
   };
 
   const handleRemoveImage = (index) => {
-    const updated = [...formData.images];
-    updated.splice(index, 1);
-    setFormData({ ...formData, images: updated });
+    setFormData((prev) => {
+      const updated = [...prev.images];
+      updated.splice(index, 1);
+      return { ...prev, images: updated };
+    });
   };
 
   const visibleProducts = showAllProducts ? products : products.slice(0, 5);
@@ -111,10 +147,11 @@ const EditProduct = () => {
         >
           <div className="flex flex-col sm:flex-row gap-4">
             <img
-              src={product.images[0]}
+              src={product.images?.[0]}
               alt="Product"
               className="w-48 h-48 mx-3 object-cover rounded"
             />
+
             <div className="flex flex-col justify-between w-full">
               <div>
                 <h3
@@ -142,25 +179,36 @@ const EditProduct = () => {
                   {product.description}
                 </p>
 
-
-
-                <p className="text-[1.2rem] mb-2 text-gray-600 font-bold ">Price: ${product.price}</p>
-                <p className="text-[1.2rem]  text-gray-600">
+                <p className="text-[1.2rem] mb-2 text-gray-600 font-bold">
+                  Price: ${product.price}
+                </p>
+                <p className="text-[1.2rem] text-gray-600">
                   Best Seller: {product.bestSeller ? "Yes" : "No"}
                 </p>
               </div>
+
               <div className="flex justify-end gap-2 mt-4">
                 <button
-                  className="bg-green-700 text-white px-8 py-1 font-semibold text-lg rounded hover:bg-amber-500 transition hover:font-semibold"
+                  className="bg-green-700 text-white px-8 py-1 font-semibold text-lg rounded hover:bg-amber-500 transition"
                   onClick={() => handleEditClick(product)}
+                  disabled={saveLoading && editingProduct === product._id}
                 >
                   {editingProduct === product._id ? "Close" : "Edit"}
                 </button>
+
                 <button
-                  className="bg-red-500 text-white px-6 py-1 text-lg font-semibold rounded hover:bg-red-800 transition hover:font-semibold"
+                  className="bg-red-500 text-white px-6 py-1 text-lg font-semibold rounded hover:bg-red-800 transition disabled:opacity-60"
                   onClick={() => handleDelete(product._id)}
+                  disabled={deleteLoadingId === product._id}
                 >
-                  Delete
+                  {deleteLoadingId === product._id ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Deleting…
+                    </span>
+                  ) : (
+                    "Delete"
+                  )}
                 </button>
               </div>
             </div>
@@ -178,6 +226,7 @@ const EditProduct = () => {
                 className="border border-gray-400 w-full px-4 py-3 mb-2 text-lg"
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
+
               <textarea
                 placeholder="Description"
                 value={formData.description}
@@ -187,15 +236,20 @@ const EditProduct = () => {
                   setFormData({ ...formData, description: e.target.value })
                 }
               />
+
               <input
                 type="number"
+                step="0.01"
                 placeholder="Price"
                 value={formData.price}
                 className="border border-gray-400 w-full px-4 py-3 mb-4 text-lg"
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               />
+
               <div className="mb-4">
-                <label className="mr-2 font-bold text-xl text-green-700">Best Seller:</label>
+                <label className="mr-2 font-bold text-xl text-green-700">
+                  Best Seller:
+                </label>
                 <input
                   type="checkbox"
                   className="h-5 w-5 mt-2 mb-2"
@@ -207,7 +261,10 @@ const EditProduct = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block font-bold mb-4 text-2xl">Product Images (Multiple Allowed)</label>
+                <label className="block font-bold mb-4 text-2xl">
+                  Product Images (Multiple Allowed)
+                </label>
+
                 <div className="flex items-center gap-6">
                   <input
                     type="file"
@@ -224,7 +281,9 @@ const EditProduct = () => {
                     Choose Files
                   </label>
                   <span className="text-gray-600">
-                    {formData.images.length > 0 ? `${formData.images.length} file(s) selected` : "No file chosen"}
+                    {formData.images.length > 0
+                      ? `${formData.images.length} file(s) selected`
+                      : "No file chosen"}
                   </span>
                 </div>
 
@@ -254,9 +313,17 @@ const EditProduct = () => {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-green-700 hover:bg-amber-500 text-white px-6 py-2 rounded font-semibold"
+                  className="bg-green-700 hover:bg-amber-500 text-white px-6 py-2 rounded font-semibold disabled:opacity-60 inline-flex items-center gap-2"
+                  disabled={saveLoading}
                 >
-                  Save Changes
+                  {saveLoading ? (
+                    <>
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </button>
               </div>
             </form>

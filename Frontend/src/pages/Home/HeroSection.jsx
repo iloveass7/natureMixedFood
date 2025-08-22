@@ -5,6 +5,7 @@ import "swiper/css";
 import "swiper/css/pagination";
 import axios from "axios";
 import Loader from "../../components/Loader";
+import { api } from "../../config/api";
 
 const HeroSection = ({ scrollToProducts }) => {
   const [cards, setCards] = useState([]);
@@ -15,8 +16,8 @@ const HeroSection = ({ scrollToProducts }) => {
     const fetchData = async () => {
       try {
         const [cardResponse, bannerResponse] = await Promise.all([
-          axios.get("http://localhost:8000/api/card/getCards"),
-          axios.get("http://localhost:8000/api/card/getBanner"),
+          api.get("/card/getCards"),
+          api.get("/card/getBanner"),
         ]);
 
         setCards(cardResponse.data || []);
