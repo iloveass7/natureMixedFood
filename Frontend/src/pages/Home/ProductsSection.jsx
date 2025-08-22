@@ -4,98 +4,79 @@ import Loader from "../../components/Loader";
 import { addToCart, replaceCartWithSingleItem } from "../../utils/cart.jsx";
 
 const ProductsSection = ({ products, loading }) => {
-  const [showAll, setShowAll] = useState(false);
-  const [notification, setNotification] = useState({ 
-    show: false, 
-    message: "", 
-    type: "" 
+  const [showAll, setShowAll] = useState(false); // for large (lg+) grid only
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
   });
   const navigate = useNavigate();
 
-  // Get user authentication status and type
   const getUserType = () => {
     const token = localStorage.getItem("token");
     const adminToken = localStorage.getItem("adminToken");
     const userData = localStorage.getItem("userData");
-    
+
     try {
       const user = userData ? JSON.parse(userData) : null;
-      
       if (adminToken) return "admin";
       if (token) return "user";
       if (user?.name === "Guest") return "guest";
-      return "none"; // Not logged in
-    } catch (error) {
+      return "none";
+    } catch {
       return "none";
     }
-  };
-
-  const getProductsPerRow = () => {
-    if (typeof window === "undefined") return 4;
-    if (window.innerWidth >= 1024) return 4;
-    if (window.innerWidth >= 640) return 2;
-    return 1;
   };
 
   const showNotification = (message, type = "add") => {
     setNotification({ show: true, message, type });
     setTimeout(() => {
-      setNotification(prev => ({ ...prev, show: false }));
-      if (type === "login-required") {
-        navigate("/login");
-      }
+      setNotification((prev) => ({ ...prev, show: false }));
+      if (type === "login-required") navigate("/login");
     }, 1500);
   };
 
   const handleAddToCart = (product, e) => {
     e.stopPropagation();
-    
     const userType = getUserType();
-    
+
     if (userType === "admin") {
       showNotification("Admins cannot add items to cart", "error");
       return;
     }
-    
     if (userType === "none") {
       showNotification("Please login to add items to cart", "login-required");
       return;
     }
-    
+
     addToCart(product);
     showNotification(`${product.name} added to cart`, "add");
   };
 
   const handleBuyNow = (product, e) => {
     e.stopPropagation();
-    
     const userType = getUserType();
-    
+
     if (userType === "admin") {
       showNotification("Admins cannot place orders", "error");
       return;
     }
-    
     if (userType === "none") {
       showNotification("Please login to place orders", "login-required");
       return;
     }
-    
+
     replaceCartWithSingleItem(product);
     showNotification("Ready for checkout", "buy");
     navigate("/checkout", { state: { fromCart: false } });
   };
 
-  const productsPerRow = getProductsPerRow();
-  const maxVisibleWithoutButton = productsPerRow * 2;
-  const shouldShowButton = products.length > maxVisibleWithoutButton;
-  const visibleProducts = showAll
-    ? products
-    : products.slice(0, maxVisibleWithoutButton);
+  if (loading) return <Loader />;
 
-  if (loading) {
-    return <Loader />;
-  }
+  // Large screens: grid shows 8 items by default (4 cols × 2 rows); “Show More” reveals all
+  const VISIBLE_GRID_COUNT = 8;
+  const gridProducts = showAll ? products : products.slice(0, VISIBLE_GRID_COUNT);
+  const shouldShowButton = products.length > VISIBLE_GRID_COUNT;
 
   const renderCard = (product) => (
     <div
@@ -124,18 +105,11 @@ const ProductsSection = ({ products, loading }) => {
 
         {/* Product Info */}
         <div className="text-center px-1 mt-2 flex-1 overflow-hidden">
-          <h3
-            className="text-xl font-bold overflow-hidden leading-tight"
-            title={product.name}
-          >
-            {product.name.length > 15
-              ? product.name.slice(0, 15) + "..."
-              : product.name}
+          <h3 className="text-xl font-bold overflow-hidden leading-tight" title={product.name}>
+            {product.name.length > 15 ? product.name.slice(0, 15) + "..." : product.name}
           </h3>
 
-          <p className="text-gray-500 text-[14px] mt-1">
-            Delivered in 2-4 days
-          </p>
+          <p className="text-gray-500 text-[14px] mt-1">Delivered in 2-4 days</p>
           <p className="text-[18px] font-bold mt-1">${product.price}</p>
         </div>
 
@@ -169,26 +143,25 @@ const ProductsSection = ({ products, loading }) => {
         <div className="text-center py-10">No products available</div>
       ) : (
         <>
-          {/* Mobile Slider View */}
-          <div className="flex sm:hidden gap-4 overflow-x-auto pb-4 mb-12 px-1 snap-x snap-mandatory scroll-smooth">
-            {visibleProducts.map((product) => (
+          {/* Mobile + Tablet (≤ lg): show ALL items in horizontal scroll */}
+          <div className="flex lg:hidden gap-4 overflow-x-auto pb-4 mb-12 px-1 snap-x snap-mandatory scroll-smooth">
+            {products.map((product) => (
               <div className="snap-center shrink-0" key={product._id}>
                 {renderCard(product)}
               </div>
             ))}
           </div>
 
-          {/* Grid View for Tablet/Desktop */}
-          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {visibleProducts.map((product) => renderCard(product))}
+          {/* Desktop (lg+): grid with “Show More” */}
+          <div className="hidden lg:grid lg:grid-cols-4 gap-6 mb-8">
+            {gridProducts.map((product) => renderCard(product))}
           </div>
 
-          {/* Show More/Less Button */}
           {shouldShowButton && (
-            <div className="flex justify-center">
+            <div className="hidden lg:flex justify-center mb-6">
               <button
-                className="bg-green-700 text-white px-8 py-2 rounded text-lg font-medium hover:bg-yellow-500 transition mb-6"
-                onClick={() => setShowAll(!showAll)}
+                className="bg-green-700 text-white px-8 py-2 rounded text-lg font-medium hover:bg-yellow-500 transition"
+                onClick={() => setShowAll((v) => !v)}
               >
                 {showAll ? "Show Less" : "Show More"}
               </button>
@@ -199,11 +172,17 @@ const ProductsSection = ({ products, loading }) => {
 
       {/* Notification Popup */}
       {notification.show && (
-        <div className={`fixed bottom-10 left-280 transform -translate-x-1/2 ${
-          notification.type === "buy" ? "bg-blue-600" : 
-          notification.type === "error" ? "bg-red-600" :
-          notification.type === "login-required" ? "bg-amber-500" : "bg-green-600"
-        } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
+        <div
+          className={`fixed bottom-10 left-280 transform -translate-x-1/2 ${
+            notification.type === "buy"
+              ? "bg-blue-600"
+              : notification.type === "error"
+              ? "bg-red-600"
+              : notification.type === "login-required"
+              ? "bg-amber-500"
+              : "bg-green-600"
+          } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-10 w-10"
@@ -216,9 +195,11 @@ const ProductsSection = ({ products, loading }) => {
               strokeLinejoin="round"
               strokeWidth={2}
               d={
-                notification.type === "error" ? "M6 18L18 6M6 6l12 12" :
-                notification.type === "login-required" ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" :
-                "M5 13l4 4L19 7"
+                notification.type === "error"
+                  ? "M6 18L18 6M6 6l12 12"
+                  : notification.type === "login-required"
+                  ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  : "M5 13l4 4L19 7"
               }
             />
           </svg>

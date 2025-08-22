@@ -20,7 +20,7 @@ const AboutUs = () => {
       </div>
 
       {/* Our Story */}
-      <div className="px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 lg:py-20 lg:mx-34 lg:max-w-10xl">
+      <div className="px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 lg:py-20 lg:mx-31 lg:max-w-10xl">
         <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-12 md:gap-16">
           <div className="md:w-1/2 w-full">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl h-64 sm:h-80 md:h-96 lg:h-140">
@@ -52,7 +52,7 @@ const AboutUs = () => {
 
       {/* Values Section */}
       <div className="bg-gray-50 pt-8 pb-14 sm:pt-10 sm:pb-16 md:pt-12 md:pb-20 lg:py-8 lg:pb-20">
-        <div className="px-4 sm:px-6 md:px-8 lg:px-6 lg:mx-35 lg:max-w-8xl">
+        <div className="px-4 sm:px-6 md:px-8 lg:px-5 lg:mx-35 lg:max-w-8xl">
           <div className="text-center mb-10 sm:mb-12 md:mb-16">
             <span className="inline-block px-4 sm:px-6 md:px-10 py-2 sm:py-3 md:py-4 my-3 sm:my-4 md:my-5 text-sm sm:text-base md:text-xl bg-green-100 text-green-700 rounded-full font-medium mb-3 sm:mb-4">
               Our Philosophy

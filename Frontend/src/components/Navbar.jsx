@@ -23,20 +23,17 @@ const Navbar = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     localStorage.removeItem('adminToken');
-
     clearCart();
-
     navigate('/login');
     window.location.reload();
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
   };
 
   const dispatchSidebarToggle = (open) => {
-    window.dispatchEvent(new CustomEvent("toggleSidebars", { detail: open }));
+    window.dispatchEvent(new CustomEvent('toggleSidebars', { detail: open }));
   };
 
   const updateCartCount = () => {
@@ -47,34 +44,33 @@ const Navbar = () => {
 
   useEffect(() => {
     updateCartCount();
-
     const handleCartUpdate = () => updateCartCount();
-
-    // Listen for cart updates
-    window.addEventListener("cartUpdated", handleCartUpdate);
-    window.addEventListener("storage", handleCartUpdate);
-
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('storage', handleCartUpdate);
     return () => {
-      window.removeEventListener("cartUpdated", handleCartUpdate);
-      window.removeEventListener("storage", handleCartUpdate);
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('storage', handleCartUpdate);
     };
   }, []);
-  ;
 
   useEffect(() => {
-    if (!cartOpen) updateCartCount(); // resync when cart closes
+    if (!cartOpen) updateCartCount();
   }, [cartOpen]);
 
   return (
     <>
       <nav className="bg-green-900 text-white shadow-md sticky top-0 z-50 w-full">
-        <div className="max-w-8xl mx-auto px-4 md:px-20 lg:px-30 py-4 flex items-center">
+        {/* symmetrical side padding on all sizes; scales up on md/lg */}
+        <div className="max-w-8xl mx-auto px-6 md:px-20 lg:px-30 py-4 flex items-center">
+          {/* left: logo */}
           <div className="flex-1 flex justify-start">
-            <Link to="/">
-              <img src="logo.png" alt="MyLogo" className="h-15 sm:h-20 mx-10" />
+            <Link to="/" aria-label="Home">
+              {/* remove mx-10 to avoid asymmetric left-only spacing */}
+              <img src="logo.png" alt="MyLogo" className="h-15 sm:h-20" />
             </Link>
           </div>
 
+          {/* center: desktop links */}
           <ul className="hidden md:flex flex-10 justify-center gap-10 text-[1.6rem] font-semibold md:text-[1.3rem] lg:text-[1.5rem]">
             <li><Link to="/" className="hover:text-yellow-500">Home</Link></li>
             <li><Link to="/blogs" className="hover:text-yellow-500">Blogs</Link></li>
@@ -90,12 +86,10 @@ const Navbar = () => {
             </li>
           </ul>
 
-          <div className="flex-1 flex justify-end items-center gap-10 md:gap-6 lg:gap-10">
+          {/* right: actions */}
+          <div className="flex-1 flex justify-end items-center gap-6 md:gap-6 lg:gap-10">
             <button
-              onClick={() => {
-                setSearchOpen(true);
-                dispatchSidebarToggle(true);
-              }}
+              onClick={() => { setSearchOpen(true); dispatchSidebarToggle(true); }}
               title="Search"
               className="hover:text-yellow-500"
             >
@@ -104,10 +98,7 @@ const Navbar = () => {
 
             {isUserLoggedIn && !isAdminLoggedIn && (
               <button
-                onClick={() => {
-                  setCartOpen(true);
-                  dispatchSidebarToggle(true);
-                }}
+                onClick={() => { setCartOpen(true); dispatchSidebarToggle(true); }}
                 className="relative hover:text-yellow-500"
                 title="Cart"
               >
@@ -132,12 +123,13 @@ const Navbar = () => {
           </div>
         </div>
 
+        {/* mobile dropdown — match the same side padding as the bar above */}
         {menuOpen && (
-          <div className="md:hidden px-10 pt-8 pb-10 bg-green-900">
+          <div className="md:hidden px-6 pt-8 pb-10 bg-green-900">
             <ul className="flex flex-col gap-6 text-2xl font-semibold">
               <li><Link to="/" onClick={() => setMenuOpen(false)}>Home</Link></li>
               <li><Link to="/blogs" onClick={() => setMenuOpen(false)}>Blogs</Link></li>
-              <li><Link to="/about" onClick={() => setMenuOpen(false)}>About Us</Link></li>
+              <li><Link to="/about-us" onClick={() => setMenuOpen(false)}>About Us</Link></li>
               <li>
                 {isAdminLoggedIn ? (
                   <Link to="/admin" onClick={() => setMenuOpen(false)}>Admin Profile</Link>
@@ -154,19 +146,12 @@ const Navbar = () => {
 
       <Cart
         isOpen={cartOpen}
-        onClose={() => {
-          setCartOpen(false);
-          dispatchSidebarToggle(false);
-        }}
+        onClose={() => { setCartOpen(false); dispatchSidebarToggle(false); }}
       />
 
       <SearchSidebar
         isOpen={searchOpen}
-        onClose={() => {
-          setSearchOpen(false);
-          setSearchQuery('');
-          dispatchSidebarToggle(false);
-        }}
+        onClose={() => { setSearchOpen(false); setSearchQuery(''); dispatchSidebarToggle(false); }}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         handleSearch={handleSearch}
