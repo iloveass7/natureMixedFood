@@ -113,46 +113,59 @@ const AllBlogs = () => {
       : undefined;
 
   return (
-    <div className="mx-10 max-w-8xl px-4 sm:px-6 md:px-[120px] py-8 mb-10">
-      {/* GRID HEADER ROW — same columns as content below */}
+    // ---- UNIFIED CONTAINER ----
+    // max-w keeps content centered;
+    // px-6 is used for BOTH sm and lg so side spacing matches.
+    <div className="max-w-screen-2xl sm:mx-auto md:mx-auto lg:mx-33 px-4 sm:px-6 lg:px-6 py-8 mb-10">
+      {/* HEADER ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-6">
-        {/* Title shares the left column width */}
         <div className="lg:col-span-8">
           <h1 className="text-6xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-green-700">
             Our Blogs
           </h1>
         </div>
 
-        {/* Search lives in the SAME column as the sidebar → identical width from first paint */}
+        {/* Search + Sort (stack on mobile, row from sm+) */}
         <div className="lg:col-span-4">
-          <div className="flex items-center gap-3 w-full">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search posts..."
               className="
-                flex-1 rounded-lg border border-gray-300 px-4 py-4 text-lg
+                w-full rounded-lg border border-gray-300 px-4 py-4 text-lg
                 caret-green-600
                 hover:border-green-600 hover:ring-1 hover:ring-green-600
                 focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-600
                 focus-visible:outline-green-600
               "
             />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-36 rounded-lg border border-gray-300 px-4 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-green-600 hover:border-green-600"
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="title">Title A–Z</option>
-            </select>
+
+            <div className="relative w-full sm:w-[11rem] md:w-[12rem] lg:w-[10rem]">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="
+                  w-full appearance-none rounded-lg
+                  border border-gray-300 px-4 pr-10 py-4 text-lg
+                  hover:border-green-600 focus:border-green-600
+                  focus:outline-none focus:ring-2 focus:ring-green-600
+                "
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="title">Title A–Z</option>
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-700">
+                ▾
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* MAIN GRID — same column widths as header above */}
+      {/* MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* LEFT */}
         <section className="lg:col-span-8">
@@ -160,14 +173,12 @@ const AllBlogs = () => {
             ref={leftCardRef}
             className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
           >
-            {/* Boxed header */}
             <div className="px-4 sm:px-5 py-7 border-b border-gray-200">
               <h2 className="px-2 text-3xl sm:text-4xl font-extrabold text-green-700">
                 Recent Blogs
               </h2>
             </div>
 
-            {/* Featured latest post */}
             <article>
               <Link to={`/blog/${latestBlog._id}`} className="block">
                 <div className="w-full h-64 sm:h-80 md:h-[30rem]">
@@ -183,7 +194,7 @@ const AllBlogs = () => {
 
               <div className="p-6 sm:p-8">
                 <Link to={`/blog/${latestBlog._id}`}>
-                  <h3 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 hover:text-green-700 transition">
+                  <h3 className="text-3xl sm:text-4xl font-extrabold text-green-700 mb-3 transition">
                     {latestBlog.title}
                   </h3>
                 </Link>
@@ -192,11 +203,7 @@ const AllBlogs = () => {
                   <span>
                     {new Date(latestBlog.createdAt).toLocaleDateString(
                       undefined,
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
+                      { year: "numeric", month: "long", day: "numeric" }
                     )}
                   </span>
                   <span>•</span>
@@ -230,7 +237,6 @@ const AllBlogs = () => {
               </h2>
             </div>
 
-            {/* Scroll area dynamically sized to match left card content */}
             <div
               className="overflow-y-auto overflow-x-hidden"
               style={scrollHeight ? { height: scrollHeight } : undefined}
@@ -247,7 +253,6 @@ const AllBlogs = () => {
                         to={`/blog/${b._id}`}
                         className="flex items-start gap-3 sm:gap-4 md:gap-5 p-4 sm:p-5 w-full"
                       >
-                        {/* Responsive thumbnail (prevents sm clipping) */}
                         <div className="flex-shrink-0 w-28 h-20 sm:w-36 sm:h-24 md:w-44 md:h-32 lg:w-56 lg:h-40 rounded-lg overflow-hidden bg-gray-100">
                           <img
                             src={b.image}

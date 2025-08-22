@@ -2,9 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API =
+  import.meta?.env?.VITE_API_URL?.replace(/\/$/, "") ||
+  "http://localhost:8000";
+
+// robust token getter (handles token vs authToken and bad string values)
+function getToken() {
+  const t1 = localStorage.getItem("token");
+  const t2 = localStorage.getItem("authToken");
+  const clean = (t) => (t && t !== "null" && t !== "undefined" ? t : null);
+  return clean(t1) || clean(t2);
+}
+
 const Profile = () => {
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  const [user, setUser] = useState(null);
+  const [fetching, setFetching] = useState(true); // ← gate initial render
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -18,42 +32,57 @@ const Profile = () => {
 
   useEffect(() => {
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchProfile = async () => {
+  async function fetchProfile() {
+    setFetching(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:8000/api/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const token = getToken();
+      if (!token) {
+        setUser(null);
+        return;
+      }
+
+      // NOTE: if your server mounts user routes at /api/user, use that path.
+      // If you truly have /api/profile, change below accordingly.
+      const { data } = await axios.get(`${API}/api/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.data.success) {
-        const u = response.data.user;
+      if (data?.success) {
+        const u = data.user;
         setUser(u);
         setFormData({
-          name: u.name,
+          name: u.name || "",
           password: "",
           phone: u.phone || "",
           district: u.district || "",
           division: u.division || "",
         });
-        localStorage.setItem("userData", JSON.stringify(u)); // ✅ Save updated user to localStorage
+        localStorage.setItem("userData", JSON.stringify(u));
       } else {
-        console.log("Unauthorized or failed");
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Failed to fetch profile", error);
+    } catch (err) {
+      // if unauthorized, clear token so the UI shows login prompt
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("authToken");
+      }
+      console.error("Failed to fetch profile:", err);
+      setUser(null);
+    } finally {
+      setFetching(false);
     }
-  };
+  }
 
   const handleEditToggle = () => {
-    setIsEditing(!isEditing);
+    setIsEditing((v) => !v);
     setMessage("");
     if (user) {
       setFormData({
-        name: user.name,
+        name: user.name || "",
         password: "",
         phone: user.phone || "",
         district: user.district || "",
@@ -67,41 +96,49 @@ const Profile = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setMessage("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
 
-  try {
-    const token = localStorage.getItem("token");
-    const response = await axios.put(
-      "http://localhost:8000/api/edit",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const token = getToken();
+      if (!token) {
+        setMessage("Please login again.");
+        return;
       }
-    );
 
-    if (response.data.success) {
-      await fetchProfile(); // re-fetch and update localStorage too
-      setIsEditing(false);
-      setMessage("Profile updated successfully!");
-      window.location.reload();
-    } else {
-      setMessage("Failed to update profile.");
+      // Adjust path if your backend route differs
+      const { data } = await axios.put(`${API}/api/user/edit`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (data?.success) {
+        await fetchProfile(); // refresh user + localStorage
+        setIsEditing(false);
+        setMessage("Profile updated successfully!");
+        window.location.reload();
+      } else {
+        setMessage("Failed to update profile.");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      setMessage(error.response?.data?.message || "An error occurred during update.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Update error:", error);
-    setMessage(
-      error.response?.data?.message || "An error occurred during update."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+  // Loading state (prevents flashing the login card while fetching)
+  if (fetching) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-pulse text-green-700 text-xl">Loading profile…</div>
+      </div>
+    );
+  }
+
+  // Not logged in (after fetch)
   if (!user) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -113,12 +150,8 @@ const handleSubmit = async (e) => {
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <h2 className="mt-3 sm:mt-4 text-xl sm:text-2xl font-medium text-gray-900">
             Login Required
@@ -128,7 +161,7 @@ const handleSubmit = async (e) => {
           </p>
           <button
             onClick={() => navigate("/login")}
-            className="mt-4 sm:mt-6 w-full sm:w-3/4 md:w-2/3 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-green-700 hover:bg-amber-400 focus:outline-none transition duration-150 ease-in-out"
+            className="mt-4 sm:mt-6 w-full sm:w-3/4 md:w-2/3 py-2 px-4 rounded-md text-sm sm:text-base font-medium text-white bg-green-700 hover:bg-amber-400 transition"
           >
             Go to Login
           </button>
@@ -136,7 +169,7 @@ const handleSubmit = async (e) => {
             Don't have an account?{" "}
             <button
               onClick={() => navigate("/register")}
-              className="font-medium text-green-700 hover:text-amber-400 focus:outline-none transition duration-150 ease-in-out"
+              className="font-medium text-green-700 hover:text-amber-400 transition"
             >
               Register here
             </button>
@@ -146,9 +179,10 @@ const handleSubmit = async (e) => {
     );
   }
 
+  // Logged-in view
   return (
     <div className="mb-6 bg-gradient-to-br from-white to-green-100 flex justify-center items-center p-4 sm:p-6">
-      <div className="mx-auto w-full max-w-7xl my-6 pb-4 bg-white rounded-3xl shadow-lg overflow-hidden">
+      <div className="mx-35 w-full max-w-8xl my-6 pb-4 bg-white rounded-3xl shadow-lg overflow-hidden">
         <div className="bg-green-800 px-4 py-6 sm:px-6 lg:px-8 flex flex-col justify-center">
           <h1 className="text-2xl sm:text-3xl lg:text-[2rem] xl:text-[2.5rem] font-bold text-amber-400 px-4 sm:px-5">
             Welcome, {user.name}
@@ -169,9 +203,7 @@ const handleSubmit = async (e) => {
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-700 mb-2">
               {user.name}
             </h2>
-            <p className="text-gray-500 text-base sm:text-lg lg:text-xl">
-              {user.email}
-            </p>
+            <p className="text-gray-500 text-base sm:text-lg lg:text-xl">{user.email}</p>
           </div>
 
           <div className="lg:ml-auto mt-4 lg:mt-6">
@@ -229,7 +261,9 @@ const handleSubmit = async (e) => {
 
 const InputField = ({ label, name, value, onChange, readOnly = false, type = "text" }) => (
   <div>
-    <label className="block text-base sm:text-lg font-medium text-green-700 mb-1 sm:mb-2">{label}</label>
+    <label className="block text-base sm:text-lg font-medium text-green-700 mb-1 sm:mb-2">
+      {label}
+    </label>
     <input
       type={type}
       name={name}
