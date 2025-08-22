@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { api } from "../../config/api";
 
 const AddProduct = () => {
   const [images, setImages] = useState([]);
@@ -22,30 +23,36 @@ const AddProduct = () => {
   const handleSubmit = async (e) => {
   e.preventDefault();
 
-  const formData = new FormData();
-  formData.append("name", title);
-  formData.append("description", description);
-  formData.append("price", price);
+  const fd = new FormData();
+  fd.append("name", title.trim());
+  fd.append("description", description.trim());
+  fd.append("price", price);
 
-  // Append each image with field name image1, image2, ...
-  images.forEach((file, index) => {
-    if (index < 5) {
-      formData.append(`image${index + 1}`, file);
-    }
+  // If your API expects these too, include them:
+  fd.append("type", type);
+  fd.append("quantity", quantity);
+
+  // image1..image5 (what your backend currently expects)
+  images.slice(0, 5).forEach((file, i) => {
+    fd.append(`image${i + 1}`, file);
   });
 
   try {
-    const res = await fetch("http://localhost:8000/api/product/addProduct", {
-      method: "POST",
+    const { data, status } = await api.post("/product/addProduct", fd, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        // Let the browser set the correct multipart boundary automatically.
+        // Only set this if your server absolutely needs it:
+        // "Content-Type": "multipart/form-data",
+
+        // If you rely on the api interceptor you can omit this; keeping it here is fine too:
+        Authorization: `Bearer ${
+          localStorage.getItem("adminToken") || localStorage.getItem("token")
+        }`,
       },
-      body: formData,
+      // withCredentials: true, // only if you’re using cookies for auth
     });
 
-    const data = await res.json();
-
-    if (res.ok) {
+    if (data?.success || (status >= 200 && status < 300)) {
       alert("Product Added Successfully!");
       console.log("Product:", data.product);
 
@@ -57,14 +64,13 @@ const AddProduct = () => {
       setQuantity(0);
       setPrice("");
     } else {
-      alert(data.message || "Failed to add product");
+      alert(data?.message || "Failed to add product");
     }
   } catch (error) {
     console.error("Error adding product:", error);
-    alert("Something went wrong. Please try again.");
+    alert(error.response?.data?.message || "Something went wrong. Please try again.");
   }
 };
-
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">

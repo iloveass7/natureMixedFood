@@ -9,6 +9,7 @@ import React, {
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Loader from "../components/Loader";
+import { api } from "../config/api";
 
 const AllBlogs = () => {
   const [blogs, setBlogs] = useState([]);
@@ -38,21 +39,26 @@ const AllBlogs = () => {
 
   // Fetch blogs
   useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const res = await axios.get("http://localhost:8000/api/blog/getBlogs");
-        const sorted = res.data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        setBlogs(sorted);
-      } catch {
-        setError("Failed to fetch blogs");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBlogs();
-  }, []);
+  let isMounted = true; // prevent state updates if unmounted
+
+  (async () => {
+    try {
+      const { data } = await api.get("/blog/getBlogs");
+      const sorted = [...data].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      if (isMounted) setBlogs(sorted);
+    } catch (err) {
+      if (isMounted) setError("Failed to fetch blogs");
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  })();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
 
   // Observe left card + right header BEFORE paint (for height sync)
   useLayoutEffect(() => {

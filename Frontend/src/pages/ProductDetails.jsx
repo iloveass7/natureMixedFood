@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ShoppingCart, Lock, Truck, Leaf, Plus, Minus } from "lucide-react";
 import Loader from "../components/Loader";
 import { addToCart, getLocalCart, saveLocalCart } from "../utils/cart";
+import { api } from "../config/api";
 
 const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -27,10 +28,10 @@ const ProductDetails = () => {
     const token = localStorage.getItem("token");
     const adminToken = localStorage.getItem("adminToken");
     const userData = localStorage.getItem("userData");
-    
+
     try {
       const user = userData ? JSON.parse(userData) : null;
-      
+
       if (adminToken) return "admin";
       if (token) return "user";
       if (user?.name === "Guest") return "guest";
@@ -43,17 +44,14 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/product/singleProduct/${id}`
-        );
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
+        const { data } = await api.get(`/product/singleProduct/${id}`);
         setProduct(data);
 
         const cart = getLocalCart();
-        const cartItem = cart.find(item => item._id === data._id);
+        const cartItem = cart.find((item) => item._id === data._id);
+
         if (cartItem) {
-          setQuantity(cartItem.quantity);
+          setQuantity(cartItem.quantity || 1);
           setIsInCart(true);
         } else {
           setQuantity(0);
@@ -63,7 +61,9 @@ const ProductDetails = () => {
         setError(null);
       } catch (err) {
         console.error("Error fetching product:", err);
-        setError(err.message);
+        setError(
+          err.response?.data?.message || err.message || "Failed to fetch product"
+        );
       } finally {
         setLoading(false);
       }
@@ -84,12 +84,12 @@ const ProductDetails = () => {
 
   const updateCartItemQuantity = (newQuantity) => {
     const userType = checkAuth();
-    
+
     if (userType === "admin") {
       showNotification("Admins cannot modify cart", "error");
       return;
     }
-    
+
     if (userType === "none") {
       showNotification("Please login to add items to cart", "login-required");
       return;
@@ -142,7 +142,7 @@ const ProductDetails = () => {
     if (!product || quantity <= 0) return;
 
     const userType = checkAuth();
-    
+
     if (userType === "none") {
       showNotification("Please login to add items to cart", "login-required");
       return;
@@ -313,13 +313,12 @@ const ProductDetails = () => {
 
       {/* Notification Popup */}
       {notification.show && (
-        <div className={`fixed bottom-10 left-290 transform -translate-x-1/2 ${
-          notification.type === "remove" ? "bg-red-500" :
-          notification.type === "update" ? "bg-amber-500" :
-          notification.type === "error" ? "bg-red-600" :
-          notification.type === "login-required" ? "bg-amber-500" : 
-          "bg-green-600"
-        } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
+        <div className={`fixed bottom-10 left-290 transform -translate-x-1/2 ${notification.type === "remove" ? "bg-red-500" :
+            notification.type === "update" ? "bg-amber-500" :
+              notification.type === "error" ? "bg-red-600" :
+                notification.type === "login-required" ? "bg-amber-500" :
+                  "bg-green-600"
+          } text-white text-lg px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in-out`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-10 w-10"
@@ -333,8 +332,8 @@ const ProductDetails = () => {
               strokeWidth={2}
               d={
                 notification.type === "remove" || notification.type === "error" ? "M6 18L18 6M6 6l12 12" :
-                notification.type === "login-required" ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" :
-                "M5 13l4 4L19 7"
+                  notification.type === "login-required" ? "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" :
+                    "M5 13l4 4L19 7"
               }
             />
           </svg>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../config/api"; // Adjust the import path as necessary
 
 const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery }) => {
   const [results, setResults] = useState([]);
@@ -13,8 +14,8 @@ const SearchSidebar = ({ isOpen, onClose, searchQuery, setSearchQuery }) => {
       if (searchQuery.trim()) {
         try {
           setLoading(true);
-          const res = await axios.get(
-            `http://localhost:8000/api/product/searchProducts?q=${searchQuery}`
+          const res = await api.get(
+            `/product/searchProducts?q=${searchQuery}`
           );
           setResults(res.data);
         } catch (err) {

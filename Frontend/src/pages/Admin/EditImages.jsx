@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "../../config/api";
 
 const EditImages = () => {
   const [bannerImage, setBannerImage] = useState(null);
@@ -7,25 +7,29 @@ const EditImages = () => {
   const [currentBanner, setCurrentBanner] = useState(null);
   const [currentSliders, setCurrentSliders] = useState([]);
 
+  // Loading states
+  const [uploadLoading, setUploadLoading] = useState(false); // main "Save All New Uploads"
+  // per-card loading is tracked on each card as `isUpdating`
+
   useEffect(() => {
     fetchImages();
   }, []);
 
   const fetchImages = async () => {
     try {
-      const bannerRes = await axios.get("http://localhost:8000/api/card/getBanner");
-      const cardsRes = await axios.get("http://localhost:8000/api/card/getCards");
+      const bannerRes = await api.get("/card/getBanner");
+      const cardsRes = await api.get("/card/getCards");
 
       setCurrentBanner(bannerRes.data?.image || null);
-      // make sliders editable by copying values to state
       setCurrentSliders(
         cardsRes.data.map((card) => ({
           ...card,
-          isUpdating: false,
+          isUpdating: false, // per-card loading flag
         }))
       );
     } catch (error) {
       console.error("Failed to fetch images", error);
+      alert("Failed to load images");
     }
   };
 
@@ -36,7 +40,7 @@ const EditImages = () => {
   };
 
   const handleSliderChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     const newSliderObjects = files.map((file) => ({
       file,
       title: "",
@@ -46,28 +50,42 @@ const EditImages = () => {
   };
 
   const handleSliderInputChange = (index, field, value) => {
-    const updated = [...sliderImages];
-    updated[index][field] = value;
-    setSliderImages(updated);
+    setSliderImages((prev) => {
+      const updated = [...prev];
+      updated[index][field] = value;
+      return updated;
+    });
   };
 
   const removeSliderImage = (index) => {
-    const updated = [...sliderImages];
-    updated.splice(index, 1);
-    setSliderImages(updated);
+    setSliderImages((prev) => {
+      const updated = [...prev];
+      updated.splice(index, 1);
+      return updated;
+    });
   };
 
   const handleCurrentSliderEdit = (index, field, value) => {
-    const updated = [...currentSliders];
-    updated[index][field] = value;
-    setCurrentSliders(updated);
+    setCurrentSliders((prev) => {
+      const updated = [...prev];
+      updated[index][field] = value;
+      return updated;
+    });
   };
 
   const updateSliderCard = async (id, title, description, index) => {
     try {
-      const token = localStorage.getItem("adminToken");
-      await axios.put(
-        `http://localhost:8000/api/card/update/${id}`,
+      // set this card into loading state
+      setCurrentSliders((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], isUpdating: true };
+        return updated;
+      });
+
+      const token = localStorage.getItem("adminToken") || "";
+
+      const { status, data } = await api.put(
+        `/card/update/${id}`,
         { title, description },
         {
           headers: {
@@ -75,41 +93,56 @@ const EditImages = () => {
           },
         }
       );
-      alert("Slider updated");
-      fetchImages();
+
+      if (status >= 200 && status < 300 && (data?.success ?? true)) {
+        alert("Slider updated");
+        await fetchImages();
+      } else {
+        throw new Error(data?.message || "Update failed");
+      }
     } catch (err) {
       console.error("Slider update error:", err);
-      alert("Update failed");
+      alert(err.response?.data?.message || err.message || "Update failed");
+    } finally {
+      // clear this card's loading state
+      setCurrentSliders((prev) => {
+        const updated = [...prev];
+        if (updated[index]) updated[index] = { ...updated[index], isUpdating: false };
+        return updated;
+      });
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (uploadLoading) return;
 
     try {
-      const token = localStorage.getItem("adminToken");
+      setUploadLoading(true);
+      const token = localStorage.getItem("adminToken") || "";
 
+      // Upload banner if provided
       if (bannerImage) {
         const bannerForm = new FormData();
         bannerForm.append("image", bannerImage);
 
-        await axios.post("http://localhost:8000/api/card/banner", bannerForm, {
+        await api.post("/card/banner", bannerForm, {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
+            // don't set Content-Type; axios sets it for FormData
           },
         });
       }
 
+      // Upload new sliders (if any)
       for (let i = 0; i < sliderImages.length; i++) {
         const form = new FormData();
         form.append("image", sliderImages[i].file);
         form.append("title", sliderImages[i].title);
         form.append("description", sliderImages[i].description);
 
-        await axios.post("http://localhost:8000/api/card/add", form, {
+        await api.post("/card/add", form, {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
         });
@@ -118,10 +151,12 @@ const EditImages = () => {
       alert("Images uploaded successfully!");
       setBannerImage(null);
       setSliderImages([]);
-      fetchImages();
+      await fetchImages();
     } catch (error) {
       console.error("Image upload error:", error.response?.data || error.message);
       alert("Upload failed. Check console for details.");
+    } finally {
+      setUploadLoading(false);
     }
   };
 
@@ -133,7 +168,6 @@ const EditImages = () => {
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-12">
-
           {/* Banner Section */}
           <div>
             <label className="block font-bold mb-4 text-2xl">Banner Image</label>
@@ -222,9 +256,17 @@ const EditImages = () => {
                       onClick={() =>
                         updateSliderCard(card._id, card.title, card.description, idx)
                       }
-                      className="bg-green-700 text-white px-6 py-2 mb-2 rounded hover:bg-amber-500 transition font-semibold"
+                      disabled={card.isUpdating || uploadLoading}
+                      className="bg-green-700 text-white px-6 py-2 mb-2 rounded hover:bg-amber-500 transition font-semibold disabled:opacity-60 inline-flex items-center gap-2"
                     >
-                      Save Changes
+                      {card.isUpdating ? (
+                        <>
+                          <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Saving…
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
                     </button>
                   </div>
                 </div>
@@ -296,7 +338,8 @@ const EditImages = () => {
                       <button
                         type="button"
                         onClick={() => removeSliderImage(idx)}
-                        className="bg-red-600 text-white px-6 py-2 mb-2 rounded hover:bg-amber-500 transition font-semibold"
+                        disabled={uploadLoading}
+                        className="bg-red-600 text-white px-6 py-2 mb-2 rounded hover:bg-amber-500 transition font-semibold disabled:opacity-60"
                       >
                         Remove
                       </button>
@@ -310,9 +353,17 @@ const EditImages = () => {
           <div className="pt-1">
             <button
               type="submit"
-              className="bg-green-700 hover:bg-amber-500 text-white px-6 py-3 rounded text-lg font-semibold w-full"
+              disabled={uploadLoading}
+              className="bg-green-700 hover:bg-amber-500 text-white px-6 py-3 rounded text-lg font-semibold w-full disabled:opacity-60 inline-flex items-center justify-center gap-2"
             >
-              Save All New Uploads
+              {uploadLoading ? (
+                <>
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save All New Uploads"
+              )}
             </button>
           </div>
         </form>
